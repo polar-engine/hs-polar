@@ -5,6 +5,7 @@ import System.IO (stderr, hPutStrLn)
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 import qualified Graphics.UI.GLFW as GLFW
+import Polar.Types.Color (colorToGL)
 import qualified Polar.Types.Options as O
 
 errorCB :: GLFW.ErrorCallback
@@ -35,7 +36,7 @@ setup :: O.Options -> GLFW.Window -> IO ()
 setup opts win = do
     GLFW.swapInterval (O.swapInterval opts)
     GLFW.setKeyCallback win (O.keyCB opts)
-    GL.clearColor $= GL.Color4 0.02 0.05 0.1 0
+    GL.clearColor $= colorToGL (O.clearColor opts)
 
 loop :: O.Options -> GLFW.Window -> IO ()
 loop opts win = GLFW.windowShouldClose win >>= \result -> unless result $ do
