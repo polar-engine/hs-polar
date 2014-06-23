@@ -1,15 +1,17 @@
-module Polar
-( run
-) where
+module Polar (run) where
 
 import Control.Monad (unless)
 import System.IO (stderr, hPutStrLn)
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 import qualified Graphics.UI.GLFW as GLFW
+import qualified Polar.Types.Options as O
 
-run :: (Int, Int) -> IO ()
-run (width, height) = do
+errorCB :: GLFW.ErrorCallback
+errorCB _ desc = hPutStrLn stderr desc
+
+run :: O.Options -> IO ()
+run opts = do
     GLFW.setErrorCallback (Just errorCB)
     result <- GLFW.init
     unless result $ (fail "GLFW.init")
@@ -19,30 +21,25 @@ run (width, height) = do
     GLFW.windowHint (GLFW.WindowHint'OpenGLForwardCompat True)
     GLFW.windowHint (GLFW.WindowHint'OpenGLProfile GLFW.OpenGLProfile'Core)
 
-    maybeWin <- GLFW.createWindow 1024 576 "Game" Nothing Nothing
+    maybeWin <- GLFW.createWindow width height (O.title opts) Nothing Nothing
     case maybeWin of
         Nothing -> GLFW.terminate >> fail "GLFW.createWindow"
         Just win -> do
             GLFW.makeContextCurrent maybeWin
-            setup win
-            loop win
+            setup opts win
+            loop opts win
             GLFW.terminate
+  where (width, height) = O.dimensions opts
 
-setup :: GLFW.Window -> IO ()
-setup win = do
-    GLFW.swapInterval 1
-    GLFW.setKeyCallback win (Just keyCB)
+setup :: O.Options -> GLFW.Window -> IO ()
+setup opts win = do
+    GLFW.swapInterval (O.swapInterval opts)
+    GLFW.setKeyCallback win (O.keyCB opts)
     GL.clearColor $= GL.Color4 0.02 0.05 0.1 0
 
-errorCB :: GLFW.ErrorCallback
-errorCB _ desc = hPutStrLn stderr desc
-
-keyCB :: GLFW.KeyCallback
-keyCB win key scancode action mods = return ()
-
-loop :: GLFW.Window -> IO ()
-loop win = GLFW.windowShouldClose win >>= \result -> unless result $ do
+loop :: O.Options -> GLFW.Window -> IO ()
+loop opts win = GLFW.windowShouldClose win >>= \result -> unless result $ do
     GL.clear [GL.ColorBuffer]
     GLFW.swapBuffers win
     GLFW.pollEvents
-    loop win
+    loop opts win
