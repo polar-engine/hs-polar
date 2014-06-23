@@ -1,5 +1,5 @@
 all:
-	ghc -W -O2 Main -o polar4
+	ghc -W -O2 src/Main -o polar4
 
 clean:
 	rm -fv $(EXECUTABLE)
