@@ -22,8 +22,8 @@ defaultOptions = Options
     , swapInterval      = 1
     , clearColor        = C.noColor
     , keyCB             = Nothing
-    , vertexShader      = "shader"
-    , fragmentShader    = "shader"
+    , vertexShader      = "shader.vsh"
+    , fragmentShader    = "shader.fsh"
     }
 
 dimensions :: Options -> (Int, Int)

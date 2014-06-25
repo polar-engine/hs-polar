@@ -1,10 +1,11 @@
 module Polar (run) where
 
 import Control.Monad (unless)
-import System.IO (stderr, hPutStrLn)
+import System.IO (stdout, stderr, hPutStrLn, hSetBuffering, BufferMode(NoBuffering))
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 import qualified Graphics.UI.GLFW as GLFW
+import Polar.Assets.Manager
 import Polar.Types.Color (colorToGL)
 import qualified Polar.Types.Options as O
 
@@ -34,9 +35,12 @@ run opts = do
 
 setup :: O.Options -> GLFW.Window -> IO ()
 setup opts win = do
+    hSetBuffering stdout NoBuffering
     GLFW.swapInterval (O.swapInterval opts)
     GLFW.setKeyCallback win (O.keyCB opts)
     GL.clearColor $= colorToGL (O.clearColor opts)
+    vs <- requireAsset (O.vertexShader opts)
+    return ()
 
 loop :: O.Options -> GLFW.Window -> IO ()
 loop opts win = GLFW.windowShouldClose win >>= \result -> unless result $ do
