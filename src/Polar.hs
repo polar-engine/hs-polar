@@ -9,11 +9,16 @@ import Polar.Assets.Manager
 import Polar.Types.Color (colorToGL)
 import qualified Polar.Types.Options as O
 
+import Control.Monad.Trans.State
+import Polar.Types.Engine (defaultEngine)
+import qualified Polar.Engine
+
 errorCB :: GLFW.ErrorCallback
 errorCB _ desc = hPutStrLn stderr desc
 
 run :: O.Options -> IO ()
 run opts = do
+    evalStateT Polar.Engine.run defaultEngine
     GLFW.setErrorCallback (Just errorCB)
     result <- GLFW.init
     unless result $ (fail "GLFW.init")
