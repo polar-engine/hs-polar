@@ -1,6 +1,6 @@
 module Polar.Engine where
 
-import Control.Monad (unless)
+import Control.Monad (when, unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.State
 import System.IO (stdout, stderr, hPutStrLn, hSetBuffering, BufferMode(..))
@@ -49,6 +49,8 @@ loop win = liftIO (GLFW.windowShouldClose win) >>= \close -> unless close $ do
         GL.clear [GL.ColorBuffer]
         GLFW.swapBuffers win
         GLFW.pollEvents
+        esc <- GLFW.getKey win GLFW.Key'Escape
+        when (esc == GLFW.KeyState'Pressed) $ GLFW.setWindowShouldClose win True
     loop win
 
 shutdown :: StateT Engine IO ()
