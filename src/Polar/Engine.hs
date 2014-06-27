@@ -26,6 +26,7 @@ setupGLFW (Point2 width height) title = do
     GLFW.windowHint (GLFW.WindowHint'ContextVersionMinor 2)
     GLFW.windowHint (GLFW.WindowHint'OpenGLForwardCompat True)
     GLFW.windowHint (GLFW.WindowHint'OpenGLProfile GLFW.OpenGLProfile'Core)
+    GLFW.windowHint (GLFW.WindowHint'ContextRobustness GLFW.ContextRobustness'NoResetNotification)
     GLFW.createWindow width height title Nothing Nothing
         >>= maybe (GLFW.terminate >> fail "GLFW.createWindow") setupWindow
 
