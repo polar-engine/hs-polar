@@ -5,9 +5,8 @@ data Key = Key1 | Key2 | Key3 | Key4 | Key5 | Key6 | Key7 | Key8 | Key9 | Key0
          | KeyK | KeyL | KeyM | KeyN | KeyO | KeyP | KeyQ | KeyR | KeyS | KeyT
          | KeyU | KeyV | KeyW | KeyX | KeyY | KeyZ | KeySpace | KeyBacktick
          | KeySemicolon | KeyApostrophe | KeyComma | KeyPeriod
-         | KeyMinus | KeyEquals | KeySlash | KeyBackslash
-         | KeyLeftBracket | KeyRightBracket
-         | KeyEnter | KeyTab | KeyBackspace | KeyEscape
+         | KeyMinus | KeyEquals | KeySlash | KeyBackslash | KeyBackspace
+         | KeyLeftBracket | KeyRightBracket | KeyEnter | KeyTab | KeyEscape
          | KeyInsert | KeyDelete | KeyPageUp | KeyPageDown | KeyHome | KeyEnd
          | KeyUp | KeyLeft | KeyDown | KeyRight | KeyPause | KeyMenu
          | KeyF1 | KeyF2 | KeyF3 | KeyF4 | KeyF5 | KeyF6 | KeyF7 | KeyF8
