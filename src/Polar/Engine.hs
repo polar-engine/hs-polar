@@ -10,21 +10,24 @@ import System.IO (stdout, stderr, hPutStrLn, hSetBuffering, BufferMode(..))
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 import qualified Graphics.UI.GLFW as GLFW
-import Polar.Hoist
 import Polar.Types.Engine
 import Polar.Types.Event
+import Polar.Types.Input
 import Polar.Types.Rectangle
 import Polar.Types.Point2
 import Polar.Types.Color
+import Polar.Hoist
+import Polar.Input
 
 run :: StateT Engine IO ()
 run = do
     size' <- gets (size . viewport)
     win <- gets title >>= liftIO . setupGLFW size'
     eventQueueRef <- liftIO (newIORef Seq.empty)
+    let keyCB _ key _ act mods = modifyIORef eventQueueRef
+            $ \q -> q Seq.|> KeyEvent (fromGLFWKey key) KeyDownAction (KeyModifiers False False False False)
     liftIO (GLFW.setKeyCallback win (Just keyCB))
     setup >> loop win eventQueueRef >> shutdown >> liftIO (shutdownGLFW win)
-  where keyCB win key scancode action mods = return ()
 
 setupGLFW :: Point2 Int -> String -> IO GLFW.Window
 setupGLFW (Point2 width height) title = do
