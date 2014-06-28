@@ -1,7 +1,11 @@
 module Polar.Input where
 
 import qualified Graphics.UI.GLFW as GLFW
+import Polar.Types.Event
 import Polar.Types.Input
+
+fromGLFWKeyEvent :: GLFW.Key -> Event
+fromGLFWKeyEvent key = KeyEvent (fromGLFWKey key) ????
 
 fromGLFWKey :: GLFW.Key -> Key
 fromGLFWKey GLFW.Key'1              = Key1

@@ -24,8 +24,9 @@ run = do
     size' <- gets (size . viewport)
     win <- gets title >>= liftIO . setupGLFW size'
     eventQueueRef <- liftIO (newIORef Seq.empty)
-    let keyCB _ key _ act mods = modifyIORef eventQueueRef
-            $ \q -> q Seq.|> KeyEvent (fromGLFWKey key) KeyDownAction (KeyModifiers False False False False)
+    let keyCB = modifyIORef eventQueueRef . flip (Seq.|>) . fromGLFWKeyCB
+    --let keyCB _ key _ act mods = modifyIORef eventQueueRef
+    --        $ flip (Seq.|>) $ KeyEvent (fromGLFWKey key) KeyDownAction (KeyModifiers False False False False)
     liftIO (GLFW.setKeyCallback win (Just keyCB))
     setup >> loop win eventQueueRef >> shutdown >> liftIO (shutdownGLFW win)
 
