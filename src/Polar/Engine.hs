@@ -26,6 +26,7 @@ run = do
     setup >> loop win eventQueueRef >> shutdown >> liftIO (shutdownGLFW win)
 
 setupGLFW :: Point Int -> String -> IO GLFW.Window
+setupGLFW (Point3 width height _) title = setupGLFW (Point2 width height) title
 setupGLFW (Point2 width height) title = do
     GLFW.setErrorCallback (Just errorCB)
     GLFW.init >>= flip unless (fail "GLFW.init")

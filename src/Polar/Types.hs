@@ -41,16 +41,16 @@ instance Num a => Num (Point a) where
     signum = fmap signum
     fromInteger i = Point3 i' i' i' where i' = fromInteger i
 
-data Rectangle a = Rectangle
+data Box a = Box
     { origin :: Point a
     , size   :: Point a
     } deriving Show
 
-defaultRectangle :: Num a => Rectangle a
-defaultRectangle = Rectangle defaultPoint defaultPoint
+defaultBox :: Num a => Box a
+defaultBox = Box defaultPoint defaultPoint
 
-instance (Num a, Eq a) => Eq (Rectangle a) where
-    Rectangle o1 s1 == Rectangle o2 s2 = o1 == s1 && o2 == s2
+instance (Num a, Eq a) => Eq (Box a) where
+    Box o1 s1 == Box o2 s2 = o1 == s1 && o2 == s2
     r1 /= r2 = not (r1 == r2)
 
 data Color = Color3 Double Double Double
@@ -78,14 +78,28 @@ data KeyModifiers = KeyModifiers
     , superModifier :: Bool
     }
 
+defaultKeyModifiers :: KeyModifiers
+defaultKeyModifiers = KeyModifiers
+    { shiftModifier = False
+    , ctrlModifier  = False
+    , altModifier   = False
+    , superModifier = False
+    }
+
 data Event = KeyEvent Key KeyAction KeyModifiers
 
 type KeyCB = KeyCallback
 
 data Engine = Engine
     { title     :: String
-    , viewport  :: Rectangle Int
+    , viewport  :: Box Int
     } deriving Show
+
+defaultEngine :: Engine
+defaultEngine = Engine
+    { title     = "Polar Engine 4"
+    , viewport  = Box (Point2 0 0) (Point2 1280 720)
+    }
 
 data Options = Options
     { optsWidth          :: Int
@@ -96,6 +110,18 @@ data Options = Options
     , optsKeyCB          :: Maybe KeyCB
     , optsVertexShader   :: String
     , optsFragmentShader :: String
+    }
+
+defaultOptions :: Options
+defaultOptions = Options
+    { optsWidth          = 1280
+    , optsHeight         = 720
+    , optsTitle          = "Polar Engine 4"
+    , optsSwapInterval   = 1
+    , optsClearColor     = noColor
+    , optsKeyCB          = Nothing
+    , optsVertexShader   = "shader.vsh"
+    , optsFragmentShader = "shader.fsh"
     }
 
 colorToGL :: (Fractional a) => Color -> GL.Color4 a
@@ -114,34 +140,8 @@ greenColor      = Color3 0 1 0
 blueColor       = Color3 0 0 1
 navyBlueColor   = Color3 0.02 0.05 0.1
 
-defaultKeyModifiers :: KeyModifiers
-defaultKeyModifiers = KeyModifiers
-    { shiftModifier = False
-    , ctrlModifier  = False
-    , altModifier   = False
-    , superModifier = False
-    }
-
-defaultEngine :: Engine
-defaultEngine = Engine
-    { title     = "Polar Engine 4"
-    , viewport  = Rectangle (Point2 0 0) (Point2 1280 720)
-    }
-
-mapViewport :: (Rectangle Int -> Rectangle Int) -> Engine -> Engine
+mapViewport :: (Box Int -> Box Int) -> Engine -> Engine
 mapViewport f v = v {viewport = f (viewport v)}
-
-defaultOptions :: Options
-defaultOptions = Options
-    { optsWidth          = 1280
-    , optsHeight         = 720
-    , optsTitle          = "Polar Engine 4"
-    , optsSwapInterval   = 1
-    , optsClearColor     = noColor
-    , optsKeyCB          = Nothing
-    , optsVertexShader   = "shader.vsh"
-    , optsFragmentShader = "shader.fsh"
-    }
 
 dimensions :: Options -> (Int, Int)
 dimensions opts = (optsWidth opts, optsHeight opts)
@@ -156,8 +156,8 @@ length :: RealFloat a => Point a -> a
 length (Point2 x y) = x * cos (atan2 y x)
 length (Point3 x y z) = sqrt (x * x + y * y + z * z)
 
-mapOrigin :: (Point a -> Point a) -> Rectangle a -> Rectangle a
+mapOrigin :: (Point a -> Point a) -> Box a -> Box a
 mapOrigin f v = v {origin = f (origin v)}
 
-mapSize :: (Point a -> Point a) -> Rectangle a -> Rectangle a
+mapSize :: (Point a -> Point a) -> Box a -> Box a
 mapSize f v = v {size = f (size v)}
