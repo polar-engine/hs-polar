@@ -10,12 +10,7 @@ import System.IO (stdout, stderr, hPutStrLn, hSetBuffering, BufferMode(..))
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 import qualified Graphics.UI.GLFW as GLFW
-import Polar.Types.Engine
-import Polar.Types.Event
-import Polar.Types.Input
-import Polar.Types.Rectangle
-import Polar.Types.Point2
-import Polar.Types.Color
+import Polar.Types
 import Polar.Hoist
 import Polar.Input
 
@@ -24,13 +19,13 @@ run = do
     size' <- gets (size . viewport)
     win <- gets title >>= liftIO . setupGLFW size'
     eventQueueRef <- liftIO (newIORef Seq.empty)
-    let keyCB = modifyIORef eventQueueRef . flip (Seq.|>) . fromGLFWKeyCB
-    --let keyCB _ key _ act mods = modifyIORef eventQueueRef
-    --        $ flip (Seq.|>) $ KeyEvent (fromGLFWKey key) KeyDownAction (KeyModifiers False False False False)
+    --let keyCB = modifyIORef eventQueueRef . flip (Seq.|>) . fromGLFWKeyCB
+    let keyCB _ key _ act mods = modifyIORef eventQueueRef
+            $ flip (Seq.|>) $ KeyEvent (fromGLFWKey key) KeyDownAction (KeyModifiers False False False False)
     liftIO (GLFW.setKeyCallback win (Just keyCB))
     setup >> loop win eventQueueRef >> shutdown >> liftIO (shutdownGLFW win)
 
-setupGLFW :: Point2 Int -> String -> IO GLFW.Window
+setupGLFW :: Point Int -> String -> IO GLFW.Window
 setupGLFW (Point2 width height) title = do
     GLFW.setErrorCallback (Just errorCB)
     GLFW.init >>= flip unless (fail "GLFW.init")
