@@ -7,6 +7,19 @@ data Point a = Point2 { x :: a, y :: a }
              | Point3 { x :: a, y :: a, z :: a }
               deriving Show
 
+defaultPoint :: Num a => Point a
+defaultPoint = Point2 0 0
+
+instance Functor Point where
+    fmap f (Point2 x y)   = Point2 (f x) (f y)
+    fmap f (Point3 x y z) = Point3 (f x) (f y) (f z)
+
+pointMapBinary :: Num a => (a -> a -> b) -> Point a -> Point a -> Point b
+pointMapBinary f (Point2 x1 y1)    (Point2 x2 y2)    = Point2 (f x1 x2) (f y1 y2)
+pointMapBinary f (Point3 x1 y1 z1) (Point3 x2 y2 z2) = Point3 (f x1 x2) (f y1 y2) (f z1 z2)
+pointMapBinary f (Point2 x1 y1)    p2@(Point3 {})    = pointMapBinary f (Point3 x1 y1 0) p2
+pointMapBinary f p1@(Point3 {})    (Point2 x2 y2)    = pointMapBinary f p1 (Point3 x2 y2 0)
+
 instance (Num a, Eq a) => Eq (Point a) where
     Point2 x1 y1    == Point2 x2 y2    = x1 == x2
                                       && y1 == y2
@@ -19,16 +32,6 @@ instance (Num a, Eq a) => Eq (Point a) where
     p1@(Point3 {})  == p2@(Point2 {})  = p2 == p1
     p1 /= p2 = not (p1 == p2)
 
-instance Functor Point where
-    fmap f (Point2 x y)   = Point2 (f x) (f y)
-    fmap f (Point3 x y z) = Point3 (f x) (f y) (f z)
-
-pointMapBinary :: Num a => (a -> a -> b) -> Point a -> Point a -> Point b
-pointMapBinary f (Point2 x1 y1) (Point2 x2 y2) = Point2 (f x1 x2) (f y1 y2)
-pointMapBinary f (Point3 x1 y1 z1) (Point3 x2 y2 z2) = Point3 (f x1 x2) (f y1 y2) (f z1 z2)
-pointMapBinary f (Point2 x1 y1) p2@(Point3 {}) = pointMapBinary f (Point3 x1 y1 0) p2
-pointMapBinary f p1@(Point3 {}) (Point2 x2 y2) = pointMapBinary f p1 (Point3 x2 y2 0)
-
 instance Num a => Num (Point a) where
     p1 + p2 = pointMapBinary (+) p1 p2
     p1 * p2 = pointMapBinary (*) p1 p2
@@ -37,9 +40,6 @@ instance Num a => Num (Point a) where
     abs = fmap abs
     signum = fmap signum
     fromInteger i = Point3 i' i' i' where i' = fromInteger i
-
-defaultPoint :: Num a => Point a
-defaultPoint = Point2 0 0
 
 data Rectangle a = Rectangle
     { origin :: Point a
@@ -85,7 +85,7 @@ type KeyCB = KeyCallback
 data Engine = Engine
     { title     :: String
     , viewport  :: Rectangle Int
-    } deriving (Show)
+    } deriving Show
 
 data Options = Options
     { optsWidth          :: Int
