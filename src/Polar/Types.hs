@@ -41,6 +41,10 @@ instance Num a => Num (Point a) where
     signum = fmap signum
     fromInteger i = Point3 i' i' i' where i' = fromInteger i
 
+length :: RealFloat a => Point a -> a
+length (Point2 x y) = x * cos (atan2 y x)
+length (Point3 x y z) = sqrt (x * x + y * y + z * z)
+
 data Box a = Box
     { origin :: Point a
     , size   :: Point a
@@ -91,14 +95,14 @@ data Event = KeyEvent Key KeyAction KeyModifiers
 type KeyCB = KeyCallback
 
 data Engine = Engine
-    { title     :: String
-    , viewport  :: Box Int
+    { engineTitle    :: String
+    , engineViewport :: Box Int
     } deriving Show
 
 defaultEngine :: Engine
 defaultEngine = Engine
-    { title     = "Polar Engine 4"
-    , viewport  = Box (Point2 0 0) (Point2 1280 720)
+    { engineTitle    = "Polar Engine 4"
+    , engineViewport = Box (Point2 0 0) (Point2 1280 720)
     }
 
 data Options = Options
@@ -141,7 +145,7 @@ blueColor       = Color3 0 0 1
 navyBlueColor   = Color3 0.02 0.05 0.1
 
 mapViewport :: (Box Int -> Box Int) -> Engine -> Engine
-mapViewport f v = v {viewport = f (viewport v)}
+mapViewport f v = v {engineViewport = f (engineViewport v)}
 
 dimensions :: Options -> (Int, Int)
 dimensions opts = (optsWidth opts, optsHeight opts)
@@ -151,10 +155,6 @@ mapX f v = v {x = f (x v)}
 
 mapY :: (a -> a) -> Point a -> Point a
 mapY f v = v {y = f (y v)}
-
-length :: RealFloat a => Point a -> a
-length (Point2 x y) = x * cos (atan2 y x)
-length (Point3 x y z) = sqrt (x * x + y * y + z * z)
 
 mapOrigin :: (Point a -> Point a) -> Box a -> Box a
 mapOrigin f v = v {origin = f (origin v)}

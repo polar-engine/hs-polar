@@ -16,8 +16,8 @@ import Polar.Input
 
 run :: StateT Engine IO ()
 run = do
-    size' <- gets (size . viewport)
-    win <- gets title >>= liftIO . setupGLFW size'
+    size' <- gets (size . engineViewport)
+    win <- gets engineTitle >>= liftIO . setupGLFW size'
     eventQueueRef <- liftIO (newIORef Seq.empty)
     --let keyCB = modifyIORef eventQueueRef . flip (Seq.|>) . fromGLFWKeyCB
     let keyCB _ key _ act mods = modifyIORef eventQueueRef
