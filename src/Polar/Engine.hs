@@ -24,7 +24,10 @@ run = do
     let keyCB _ key _ act mods = modifyIORef eventQueueRef
             $ flip (Seq.|>) $ KeyEvent (fromGLFWKey key) KeyDownAction (KeyModifiers False False False False)
     liftIO (GLFW.setKeyCallback win (Just keyCB))
-    setup >> loop win eventQueueRef >> shutdown >> liftIO (shutdownGLFW win)
+    setup
+    loop win eventQueueRef
+    shutdown
+    liftIO (shutdownGLFW win)
 
 setupGLFW :: Box Int -> String -> IO GLFW.Window
 setupGLFW (Box origin size) title = do
@@ -53,7 +56,7 @@ setup = do
 loop :: GLFW.Window -> IORef (Seq.Seq Event) -> StateT Engine IO ()
 loop win eventQueueRef = liftIO (GLFW.windowShouldClose win) >>= \close -> unless close $ do
     liftIO $ do
-        GL.clear [GL.ColorBuffer]
+        GL.clear [GL.ColorBuffer, GL.DepthBuffer]
         GLFW.swapBuffers win
         GLFW.pollEvents
         esc <- GLFW.getKey win GLFW.Key'Escape
@@ -68,7 +71,9 @@ shutdown :: StateT Engine IO ()
 shutdown = return ()
 
 shutdownGLFW :: GLFW.Window -> IO ()
-shutdownGLFW win = GLFW.destroyWindow win >> GLFW.terminate
+shutdownGLFW win = do
+    GLFW.destroyWindow win
+    GLFW.terminate
 
 errorCB :: GLFW.ErrorCallback
 errorCB _ desc = hPutStrLn stderr desc
