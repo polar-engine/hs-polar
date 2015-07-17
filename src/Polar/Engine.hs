@@ -3,9 +3,7 @@ module Polar.Engine where
 import Data.IORef
 import qualified Data.Foldable as Foldable (mapM_)
 import qualified Data.Sequence as Seq
-import Control.Monad (when, unless)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.State
+import Control.Monad.State
 import System.IO (stdout, stderr, hPutStrLn, hSetBuffering, BufferMode(..))
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
