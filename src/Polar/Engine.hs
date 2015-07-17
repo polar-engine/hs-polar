@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Polar.Engine where
 
 import Data.IORef
@@ -14,8 +16,9 @@ import Polar.Input
 
 run :: StateT Engine IO ()
 run = do
-    size' <- gets (size . engineViewport)
-    win <- gets engineTitle >>= liftIO . setupGLFW size'
+    viewport <- gets engineViewport
+    title <- gets engineTitle
+    win <- liftIO (setupGLFW viewport title)
     eventQueueRef <- liftIO (newIORef Seq.empty)
     --let keyCB = modifyIORef eventQueueRef . flip (Seq.|>) . fromGLFWKeyCB
     let keyCB _ key _ act mods = modifyIORef eventQueueRef
@@ -23,18 +26,22 @@ run = do
     liftIO (GLFW.setKeyCallback win (Just keyCB))
     setup >> loop win eventQueueRef >> shutdown >> liftIO (shutdownGLFW win)
 
-setupGLFW :: Point Int -> String -> IO GLFW.Window
-setupGLFW (Point3 width height _) title = setupGLFW (Point2 width height) title
-setupGLFW (Point2 width height) title = do
+setupGLFW :: Box Int -> String -> IO GLFW.Window
+setupGLFW (Box origin size) title = do
     GLFW.setErrorCallback (Just errorCB)
-    GLFW.init >>= flip unless (fail "GLFW.init")
+    GLFW.init >>= \succeeded -> unless succeeded (fail "failed to init GLFW")
     GLFW.windowHint (GLFW.WindowHint'ContextVersionMajor 3)
     GLFW.windowHint (GLFW.WindowHint'ContextVersionMinor 2)
     GLFW.windowHint (GLFW.WindowHint'OpenGLForwardCompat True)
     GLFW.windowHint (GLFW.WindowHint'OpenGLProfile GLFW.OpenGLProfile'Core)
-    GLFW.createWindow width height title Nothing Nothing
-        >>= maybe (GLFW.terminate >> fail "GLFW.createWindow") setupWindow
-  where setupWindow win = GLFW.makeContextCurrent (Just win) >> return win
+    GLFW.createWindow (x size) (y size) title Nothing Nothing >>= \case
+        Nothing  -> do
+            GLFW.terminate
+            fail "failed to create window"
+        Just win -> do
+            GLFW.makeContextCurrent (Just win)
+            GLFW.setWindowPos win (x origin) (y origin)
+            return win
 
 setup :: StateT Engine IO ()
 setup = do
