@@ -2,20 +2,32 @@
 
 module Polar.Engine where
 
-import Data.IORef
-import qualified Data.Foldable as Foldable (mapM_)
-import qualified Data.Sequence as Seq
 import Control.Monad.State
-import System.IO (stdout, stderr, hPutStrLn, hSetBuffering, BufferMode(..))
-import Graphics.Rendering.OpenGL (($=))
-import qualified Graphics.Rendering.OpenGL as GL
-import qualified Graphics.UI.GLFW as GLFW
 import Polar.Types
-import Polar.Hoist
-import Polar.Input
+import Polar.Listener (notify)
 
-run :: StateT Engine IO ()
+run :: PolarIO ()
 run = do
+    gets engineStartup >>= id
+    notify StartupNote
+    notify ShutdownNote
+
+{-
+startup :: PolarIO ()
+startup = gets engineSystems >>= mapM_ startupOne
+  where startupOne sys = sysStartup sys >>= \case
+            Nothing  -> liftIO $ hPutStrLn stderr ('[' : sysName sys ++ "] started up")
+            Just err -> liftIO $ hPutStrLn stderr ('[' : sysName sys ++ "] failed to start up (" ++ err ++ ")")
+
+shutdown :: PolarIO ()
+shutdown = gets (engineSystems) >>= mapM_ shutdownOne . reverse
+  where shutdownOne sys = sysShutdown sys >>= \case
+            Nothing  -> liftIO $ hPutStrLn stderr ('[' : sysName sys ++ "] shut down")
+            Just err -> liftIO $ hPutStrLn stderr ('[' : sysName sys ++ "] failed to shut down (" ++ err ++ ")")
+-}
+{-
+run' :: PolarIO ()
+run' = do
     viewport <- gets engineViewport
     title <- gets engineTitle
     win <- liftIO (setupGLFW viewport title)
@@ -29,31 +41,14 @@ run = do
     shutdown
     liftIO (shutdownGLFW win)
 
-setupGLFW :: Box Int -> String -> IO GLFW.Window
-setupGLFW (Box origin size) title = do
-    GLFW.setErrorCallback (Just errorCB)
-    GLFW.init >>= \succeeded -> unless succeeded (fail "failed to init GLFW")
-    GLFW.windowHint (GLFW.WindowHint'ContextVersionMajor 3)
-    GLFW.windowHint (GLFW.WindowHint'ContextVersionMinor 2)
-    GLFW.windowHint (GLFW.WindowHint'OpenGLForwardCompat True)
-    GLFW.windowHint (GLFW.WindowHint'OpenGLProfile GLFW.OpenGLProfile'Core)
-    GLFW.createWindow (x size) (y size) title Nothing Nothing >>= \case
-        Nothing  -> do
-            GLFW.terminate
-            fail "failed to create window"
-        Just win -> do
-            GLFW.makeContextCurrent (Just win)
-            GLFW.setWindowPos win (x origin) (y origin)
-            return win
-
-setup :: StateT Engine IO ()
+setup :: PolarIO ()
 setup = do
     liftIO $ do
         hSetBuffering stdout NoBuffering
         GLFW.swapInterval 1
         GL.clearColor $= colorToGL navyBlueColor
 
-loop :: GLFW.Window -> IORef (Seq.Seq Event) -> StateT Engine IO ()
+loop :: GLFW.Window -> IORef (Seq.Seq Event) -> PolarIO ()
 loop win eventQueueRef = liftIO (GLFW.windowShouldClose win) >>= \close -> unless close $ do
     liftIO $ do
         GL.clear [GL.ColorBuffer, GL.DepthBuffer]
@@ -64,16 +59,9 @@ loop win eventQueueRef = liftIO (GLFW.windowShouldClose win) >>= \close -> unles
     liftIO (readIORef eventQueueRef) >>= hoistState . Foldable.mapM_ handleEvent
     loop win eventQueueRef
 
-handleEvent :: Event -> State Engine ()
+handleEvent :: Event -> Polar ()
 handleEvent e = return ()
 
-shutdown :: StateT Engine IO ()
-shutdown = return ()
-
-shutdownGLFW :: GLFW.Window -> IO ()
-shutdownGLFW win = do
-    GLFW.destroyWindow win
-    GLFW.terminate
-
-errorCB :: GLFW.ErrorCallback
-errorCB _ desc = hPutStrLn stderr desc
+shutdown' :: PolarIO ()
+shutdown' = return ()
+-}

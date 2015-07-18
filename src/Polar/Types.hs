@@ -1,5 +1,10 @@
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 module Polar.Types where
 
+import qualified Data.Map as M
+import Control.Monad.State
 import qualified Graphics.Rendering.OpenGL as GL (Color4(..))
 import Graphics.UI.GLFW (KeyCallback)
 
@@ -94,16 +99,30 @@ data Event = KeyEvent Key KeyAction KeyModifiers
 
 type KeyCB = KeyCallback
 
+data Notification = StartupNote | ShutdownNote
+                    deriving (Eq, Ord, Show)
+
+type Listener = Notification -> PolarIO ()
+
+instance Show Listener where show _ = "Listener <native code>"
+
 data Engine = Engine
-    { engineTitle    :: String
-    , engineViewport :: Box Int
-    } deriving Show
+    { engineTitle     :: String
+    , engineStartup   :: PolarIO ()
+    , engineListeners :: M.Map Notification [Listener]
+    , engineViewport  :: Box Int
+    }
 
 defaultEngine :: Engine
 defaultEngine = Engine
-    { engineTitle    = "Polar Engine 4"
-    , engineViewport = Box (Point2 0 0) (Point2 1280 720)
+    { engineTitle     = "Polar Engine 4"
+    , engineStartup   = return ()
+    , engineListeners = M.empty
+    , engineViewport  = Box (Point2 0 0) (Point2 1280 720)
     }
+
+type Polar = State Engine
+type PolarIO = StateT Engine IO
 
 data Options = Options
     { optsWidth          :: Int
@@ -143,6 +162,10 @@ redColor        = Color3 1 0 0
 greenColor      = Color3 0 1 0
 blueColor       = Color3 0 0 1
 navyBlueColor   = Color3 0.02 0.05 0.1
+
+mapListeners :: (M.Map Notification [Listener] -> M.Map Notification [Listener])
+             -> Engine -> Engine
+mapListeners f v = v {engineListeners = f (engineListeners v)}
 
 mapViewport :: (Box Int -> Box Int) -> Engine -> Engine
 mapViewport f v = v {engineViewport = f (engineViewport v)}
