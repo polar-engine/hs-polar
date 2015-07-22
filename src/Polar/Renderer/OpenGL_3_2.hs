@@ -9,12 +9,22 @@ import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 import qualified Graphics.UI.GLFW as GLFW
 import Polar.Types
+import Polar.Control
 import Polar.Listener
 
 startup :: Listener
 startup _ = do
     win <- liftIO $ setupWindow (Box defaultPoint (Point2 200 200)) "Game"
+    listen TickNote (tick win)
     listen ShutdownNote (shutdown win)
+
+tick :: GLFW.Window -> Notification -> PolarIO ()
+tick win _ = liftIO (GLFW.windowShouldClose win) >>= \case
+    True  -> exit
+    False -> liftIO $ do
+        GL.clear [GL.ColorBuffer, GL.DepthBuffer]
+        GLFW.swapBuffers win
+        GLFW.pollEvents
 
 shutdown :: GLFW.Window -> Listener
 shutdown win _ = liftIO (destroyWindow win)

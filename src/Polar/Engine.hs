@@ -10,7 +10,15 @@ run :: PolarIO ()
 run = do
     gets engineStartup >>= id
     notify StartupNote
+    loop
     notify ShutdownNote
+
+loop :: PolarIO ()
+loop = gets engineWillExit >>= \case
+    True  -> return ()
+    False -> do
+        notify TickNote
+        loop
 
 {-
 startup :: PolarIO ()
