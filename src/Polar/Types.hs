@@ -99,7 +99,7 @@ data Event = KeyEvent Key KeyAction KeyModifiers
 
 type KeyCB = KeyCallback
 
-data Notification = StartupNote | ShutdownNote
+data Notification = StartupNote | ShutdownNote | TickNote
                     deriving (Eq, Ord, Show)
 
 type Listener = Notification -> PolarIO ()
@@ -110,6 +110,7 @@ data Engine = Engine
     { engineTitle     :: String
     , engineStartup   :: PolarIO ()
     , engineListeners :: M.Map Notification [Listener]
+    , engineWillExit  :: Bool
     , engineViewport  :: Box Int
     }
 
@@ -118,6 +119,7 @@ defaultEngine = Engine
     { engineTitle     = "Polar Engine 4"
     , engineStartup   = return ()
     , engineListeners = M.empty
+    , engineWillExit  = False
     , engineViewport  = Box (Point2 0 0) (Point2 1280 720)
     }
 
@@ -166,6 +168,9 @@ navyBlueColor   = Color3 0.02 0.05 0.1
 mapListeners :: (M.Map Notification [Listener] -> M.Map Notification [Listener])
              -> Engine -> Engine
 mapListeners f v = v {engineListeners = f (engineListeners v)}
+
+setWillExit :: Bool -> Engine -> Engine
+setWillExit b v = v {engineWillExit = b}
 
 mapViewport :: (Box Int -> Box Int) -> Engine -> Engine
 mapViewport f v = v {engineViewport = f (engineViewport v)}
