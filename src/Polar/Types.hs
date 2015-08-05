@@ -3,6 +3,7 @@
 
 module Polar.Types where
 
+import Data.Ratio
 import qualified Data.Map as M
 import Control.Monad.State
 import qualified Graphics.Rendering.OpenGL as GL (Color4(..))
@@ -95,12 +96,18 @@ defaultKeyModifiers = KeyModifiers
     , superModifier = False
     }
 
-data Event = KeyEvent Key KeyAction KeyModifiers
+data KeyEvent = KeyEvent Key KeyAction KeyModifiers
 
 type KeyCB = KeyCallback
 
-data Notification = StartupNote | ShutdownNote | TickNote
-                    deriving (Eq, Ord, Show)
+{- Event        - event types to be listened for
+ - Notification - notification types to be received on events
+ -}
+
+data Event = StartupEvent | ShutdownEvent | TickEvent
+             deriving (Eq, Ord)
+
+data Notification = StartupNote | ShutdownNote | TickNote (Ratio Integer)
 
 type Listener = Notification -> PolarIO ()
 
@@ -109,7 +116,7 @@ instance Show Listener where show _ = "Listener <native code>"
 data Engine = Engine
     { engineTitle     :: String
     , engineStartup   :: PolarIO ()
-    , engineListeners :: M.Map Notification [Listener]
+    , engineListeners :: M.Map Event [Listener]
     , engineWillExit  :: Bool
     , engineViewport  :: Box Int
     }
@@ -165,7 +172,7 @@ greenColor      = Color3 0 1 0
 blueColor       = Color3 0 0 1
 navyBlueColor   = Color3 0.02 0.05 0.1
 
-mapListeners :: (M.Map Notification [Listener] -> M.Map Notification [Listener])
+mapListeners :: (M.Map Event [Listener] -> M.Map Event [Listener])
              -> Engine -> Engine
 mapListeners f v = v {engineListeners = f (engineListeners v)}
 

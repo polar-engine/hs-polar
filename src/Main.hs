@@ -9,4 +9,4 @@ main :: IO ()
 main = run defaultEngine { engineStartup = startup }
 
 startup :: PolarIO ()
-startup = listen StartupNote Renderer.startup
+startup = listen StartupEvent Renderer.startup

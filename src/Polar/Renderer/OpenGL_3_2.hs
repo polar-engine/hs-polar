@@ -15,8 +15,8 @@ import Polar.Listener
 startup :: Listener
 startup _ = do
     win <- liftIO $ setupWindow (Box defaultPoint (Point2 200 200)) "Game"
-    listen TickNote (tick win)
-    listen ShutdownNote (shutdown win)
+    listen TickEvent (tick win)
+    listen ShutdownEvent (shutdown win)
 
 tick :: GLFW.Window -> Notification -> PolarIO ()
 tick win _ = liftIO (GLFW.windowShouldClose win) >>= \case
