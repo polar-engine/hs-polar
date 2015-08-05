@@ -9,24 +9,48 @@ import Control.Monad.State
 import qualified Graphics.Rendering.OpenGL as GL (Color4(..))
 import Graphics.UI.GLFW (KeyCallback)
 
-data Point a = Point2 { x :: a, y :: a }
-             | Point3 { x :: a, y :: a, z :: a }
-              deriving Show
+data Point a = Point a | Point2 a a | Point3 a a a
+               deriving Show
+
+x :: Point a -> a
+x (Point w) = w
+x (Point2 x' _) = x'
+x (Point3 x' _ _) = x'
+
+y :: Point a -> a
+y (Point w) = w
+y (Point2 _ y') = y'
+y (Point3 _ y' _) = y'
+
+z :: Point a -> a
+z (Point w) = w
+z (Point2 _ z') = z'
+z (Point3 _ _ z') = z'
 
 defaultPoint :: Num a => Point a
 defaultPoint = Point2 0 0
 
 instance Functor Point where
+    fmap f (Point w)      = Point (f w)
     fmap f (Point2 x y)   = Point2 (f x) (f y)
     fmap f (Point3 x y z) = Point3 (f x) (f y) (f z)
 
 pointMapBinary :: Num a => (a -> a -> b) -> Point a -> Point a -> Point b
+pointMapBinary f (Point w1)        (Point w2)        = Point (f w1 w2)
 pointMapBinary f (Point2 x1 y1)    (Point2 x2 y2)    = Point2 (f x1 x2) (f y1 y2)
 pointMapBinary f (Point3 x1 y1 z1) (Point3 x2 y2 z2) = Point3 (f x1 x2) (f y1 y2) (f z1 z2)
+pointMapBinary f (Point w1)        p2@(Point2 {})    = pointMapBinary f (Point2 w1 w1) p2
+pointMapBinary f (Point w1)        p2@(Point3 {})    = pointMapBinary f (Point3 w1 w1 w1) p2
 pointMapBinary f (Point2 x1 y1)    p2@(Point3 {})    = pointMapBinary f (Point3 x1 y1 0) p2
-pointMapBinary f p1@(Point3 {})    (Point2 x2 y2)    = pointMapBinary f p1 (Point3 x2 y2 0)
+pointMapBinary f p1 p2 = pointMapBinary (flip f) p2 p1
 
 instance (Num a, Eq a) => Eq (Point a) where
+    Point w1        == Point w2        = w1 == w2
+    Point w1        == Point2 x2 y2    = w1 == x2
+                                      && w1 == y2
+    Point w1        == Point3 x2 y2 z2 = w1 == x2
+                                      && w1 == y2
+                                      && w1 == z2
     Point2 x1 y1    == Point2 x2 y2    = x1 == x2
                                       && y1 == y2
     Point2 x1 y1    == Point3 x2 y2 z2 = x1 == x2
@@ -35,7 +59,7 @@ instance (Num a, Eq a) => Eq (Point a) where
     Point3 x1 y1 z1 == Point3 x2 y2 z2 = x1 == x2
                                       && y1 == y2
                                       && z1 == z2
-    p1@(Point3 {})  == p2@(Point2 {})  = p2 == p1
+    p1 == p2 = p2 == p1
     p1 /= p2 = not (p1 == p2)
 
 instance Num a => Num (Point a) where
@@ -48,6 +72,7 @@ instance Num a => Num (Point a) where
     fromInteger i = Point3 i' i' i' where i' = fromInteger i
 
 length :: RealFloat a => Point a -> a
+length (Point _) = undefined
 length (Point2 x y) = x * cos (atan2 y x)
 length (Point3 x y z) = sqrt (x * x + y * y + z * z)
 
@@ -184,12 +209,6 @@ mapViewport f v = v {engineViewport = f (engineViewport v)}
 
 dimensions :: Options -> (Int, Int)
 dimensions opts = (optsWidth opts, optsHeight opts)
-
-mapX :: (a -> a) -> Point a -> Point a
-mapX f v = v {x = f (x v)}
-
-mapY :: (a -> a) -> Point a -> Point a
-mapY f v = v {y = f (y v)}
 
 mapOrigin :: (Point a -> Point a) -> Box a -> Box a
 mapOrigin f v = v {origin = f (origin v)}
