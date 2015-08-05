@@ -14,7 +14,7 @@ import Polar.Listener
 
 startup :: Listener
 startup _ = do
-    win <- liftIO $ setupWindow (Box defaultPoint (Point2 200 200)) "Game"
+    win <- liftIO $ setupWindow (Box (Point 50) (Point2 640 360)) "Game"
     listen TickEvent (tick win)
     listen ShutdownEvent (shutdown win)
 
