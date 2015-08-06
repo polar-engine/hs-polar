@@ -71,10 +71,10 @@ instance Num a => Num (Point a) where
     signum = fmap signum
     fromInteger i = Point3 i' i' i' where i' = fromInteger i
 
-length :: RealFloat a => Point a -> a
-length (Point _) = undefined
-length (Point2 x y) = x * cos (atan2 y x)
-length (Point3 x y z) = sqrt (x * x + y * y + z * z)
+magnitude :: RealFloat a => Point a -> a
+magnitude (Point _) = undefined
+magnitude (Point2 x y) = x * cos (atan2 y x)
+magnitude (Point3 x y z) = sqrt (x * x + y * y + z * z)
 
 data Box a = Box
     { origin :: Point a
