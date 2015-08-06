@@ -3,11 +3,15 @@
 module Polar.Engine where
 
 import Control.Monad.State
+import System.IO (hSetBuffering, stdout, stderr, BufferMode(..))
 import Polar.Types
 import Polar.Listener (notify)
 
 run :: PolarIO ()
 run = do
+    liftIO $ do
+        hSetBuffering stdout NoBuffering
+        hSetBuffering stderr LineBuffering
     gets engineStartup >>= id
     notify StartupEvent StartupNote
     loop
