@@ -9,6 +9,7 @@ import System.IO (stderr, hPutStrLn)
 import Foreign (nullPtr)
 import Foreign.Storable (sizeOf)
 import Foreign.Marshal.Array (withArray)
+import GHC.Stack (currentCallStack, renderStack)
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 import qualified Graphics.UI.GLFW as GLFW
@@ -22,60 +23,61 @@ vertices = [ -1, -1
            ,  0,  1
            ]
 
-gl :: IO a -> String -> IO a
-gl action "" = do
+gl :: IO a -> IO a
+gl action = do
     result <- action
-    GL.get GL.errors >>= mapM_ printError
+    GL.get GL.errors >>= \case
+        [] -> return ()
+        xs -> do
+            mapM_ printError xs
+            currentCallStack >>= \case
+                [] -> return ()
+                stack -> putStrLn $ (renderStack . init . init) stack
     return result
   where printError (GL.Error category message) = putStrLn ("[ERROR] " ++ show category ++ " (" ++ message ++ ")")
-gl action info = do
-    putStrLn ("[INFO] " ++ info)
-    gl action ""
 
 setupVertices :: IO (GL.VertexArrayObject, GL.BufferObject)
 setupVertices = do
-    vao <- gl GL.genObjectName "create vertex array"
-    gl (GL.bindVertexArrayObject $= Just vao) "bind vertex array"
-    vbo <- gl GL.genObjectName "create buffer"
-    gl (GL.bindBuffer GL.ArrayBuffer $= Just vbo) "bind buffer"
-    withArray vertices $ \buffer -> gl
-        (GL.bufferData GL.ArrayBuffer $= (fromIntegral (length vertices * sizeOf (head vertices)), buffer, GL.StaticDraw))
-        "upload buffer data"
-    gl (GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float 0 nullPtr))
-        "set vertex attrib pointer"
+    vao <- gl GL.genObjectName
+    gl $ GL.bindVertexArrayObject $= Just vao
+    vbo <- gl GL.genObjectName
+    gl $ GL.bindBuffer GL.ArrayBuffer $= Just vbo
+    withArray vertices $ \buffer -> gl $
+        GL.bufferData GL.ArrayBuffer $= (fromIntegral (length vertices * sizeOf (head vertices)), buffer, GL.StaticDraw)
+    gl $ GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float 0 nullPtr)
     return (vao, vbo)
 
 setupShaders :: IO ()
 setupShaders = do
-    vsh <- gl (GL.createShader GL.VertexShader) "create vertex shader"
-    BS.readFile "shader.gls" >>= \s -> gl (GL.shaderSourceBS vsh $= s) "upload vertex shader source"
-    gl (GL.compileShader vsh) "compile vertex shader"
+    vsh <- gl $ GL.createShader GL.VertexShader
+    BS.readFile "shader.gls" >>= \s -> gl $ GL.shaderSourceBS vsh $= s
+    --gl $ GL.compileShader vsh
 
-    status <- gl (GL.get (GL.compileStatus vsh)) "get compile status"
+    status <- gl $ GL.get (GL.compileStatus vsh)
     unless status $ do
-        infoLog <- gl (GL.get (GL.shaderInfoLog vsh)) "get shader info log"
+        infoLog <- gl $ GL.get (GL.shaderInfoLog vsh)
         putStrLn ("[INFOLOG] " ++ infoLog)
 
-    fsh <- gl (GL.createShader GL.FragmentShader) "create fragment shader"
-    BS.readFile "shader.fsh" >>= \s -> gl (GL.shaderSourceBS fsh $= s) "upload fragment shader source"
-    gl (GL.compileShader fsh) "compile fragment shader"
+    fsh <- gl $ GL.createShader GL.FragmentShader
+    BS.readFile "shader.fsh" >>= \s -> gl $ GL.shaderSourceBS fsh $= s
+    gl $ GL.compileShader fsh
 
-    status <- gl (GL.get (GL.compileStatus fsh)) "get compile status"
+    status <- gl $ GL.get (GL.compileStatus fsh)
     unless status $ do
-        infoLog <- gl (GL.get (GL.shaderInfoLog fsh)) "get shader info log"
+        infoLog <- gl $ GL.get (GL.shaderInfoLog fsh)
         putStrLn ("[INFOLOG] " ++ infoLog)
 
-    program <- gl GL.createProgram "create program"
-    gl (GL.attachedShaders program $= [vsh, fsh]) "attach shaders to program"
-    gl (GL.linkProgram program) "link program"
+    program <- gl GL.createProgram
+    gl $ GL.attachedShaders program $= [vsh, fsh]
+    gl $ GL.linkProgram program
 
-    status <- gl (GL.get (GL.linkStatus program)) "get link status"
+    status <- gl $ GL.get (GL.linkStatus program)
     unless status $ do
-        infoLog <- gl (GL.get (GL.programInfoLog program)) "get program info log"
+        infoLog <- gl $ GL.get (GL.programInfoLog program)
         putStrLn ("[INFOLOG] " ++ infoLog)
 
-    gl (GL.currentProgram $= Just program) "set current program"
-    gl (GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled) "enable attribute"
+    gl $ GL.currentProgram $= Just program
+    gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
 
 startup :: Listener
 startup _ = do
@@ -90,8 +92,8 @@ render :: GLFW.Window -> (GL.VertexArrayObject, GL.BufferObject) -> Notification
 render win (vao, vbo) _ = liftIO (GLFW.windowShouldClose win) >>= \case
     True  -> exit
     False -> liftIO $ do
-        GL.clear [GL.ColorBuffer, GL.DepthBuffer]
-        gl (GL.drawArrays GL.Triangles 0 (fromIntegral (length vertices))) ""
+        gl $ GL.clear [GL.ColorBuffer, GL.DepthBuffer]
+        gl $ GL.drawArrays GL.Triangles 0 (fromIntegral (length vertices))
         GLFW.swapBuffers win
         GLFW.pollEvents
 
