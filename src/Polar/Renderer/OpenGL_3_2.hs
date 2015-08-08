@@ -47,43 +47,41 @@ setupVertices = do
     gl $ GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float 0 nullPtr)
     return (vao, vbo)
 
-setupShaders :: IO ()
-setupShaders = do
-    vsh <- gl $ GL.createShader GL.VertexShader
-    BS.readFile "shader.gls" >>= \s -> gl $ GL.shaderSourceBS vsh $= s
-    --gl $ GL.compileShader vsh
-
-    status <- gl $ GL.get (GL.compileStatus vsh)
+setupShader :: String -> GL.ShaderType -> IO GL.Shader
+setupShader path shaderType= do
+    shader <- gl (GL.createShader shaderType)
+    BS.readFile path >>= gl . (GL.shaderSourceBS shader $=)
+    gl (GL.compileShader shader)
+    status <- gl $ GL.get (GL.compileStatus shader)
     unless status $ do
-        infoLog <- gl $ GL.get (GL.shaderInfoLog vsh)
+        infoLog <- gl $ GL.get (GL.shaderInfoLog shader)
         putStrLn ("[INFOLOG] " ++ infoLog)
+    return shader
 
-    fsh <- gl $ GL.createShader GL.FragmentShader
-    BS.readFile "shader.fsh" >>= \s -> gl $ GL.shaderSourceBS fsh $= s
-    gl $ GL.compileShader fsh
-
-    status <- gl $ GL.get (GL.compileStatus fsh)
-    unless status $ do
-        infoLog <- gl $ GL.get (GL.shaderInfoLog fsh)
-        putStrLn ("[INFOLOG] " ++ infoLog)
-
+setupProgram :: [GL.Shader] -> IO GL.Program
+setupProgram shaders = do
     program <- gl GL.createProgram
-    gl $ GL.attachedShaders program $= [vsh, fsh]
-    gl $ GL.linkProgram program
-
-    status <- gl $ GL.get (GL.linkStatus program)
+    gl (GL.attachedShaders program $= shaders)
+    gl (GL.linkProgram program)
+    status <- gl $ GL.get (GL.linkStatus shader)
     unless status $ do
-        infoLog <- gl $ GL.get (GL.programInfoLog program)
+        infoLog <- gl $ GL.get (GL.programInfoLog shader)
         putStrLn ("[INFOLOG] " ++ infoLog)
+    return program
 
-    gl $ GL.currentProgram $= Just program
-    gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
+initShaderProgram :: IO ()
+initShaderProgram = do
+    vsh <- setupShader "shader.vsh" GL.VertexShader
+    fsh <- setupShader "shader.fsh" GL.FragmentShader
+    program <- setupProgram [vsh, fsh]
+    gl (GL.currentProgram $= Just program)
 
 startup :: Listener
 startup _ = do
     win <- liftIO $ setupWindow (Box (Point 50) (Point2 640 360)) "Game"
     objs <- liftIO setupVertices
-    liftIO setupShaders
+    liftIO initShaderProgram
+    gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
     liftIO (GL.clearColor $= GL.Color4 0 0 0 0)
     listen TickEvent (render win objs)
     listen ShutdownEvent (shutdown win)
