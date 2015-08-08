@@ -63,9 +63,9 @@ setupProgram shaders = do
     program <- gl GL.createProgram
     gl (GL.attachedShaders program $= shaders)
     gl (GL.linkProgram program)
-    status <- gl $ GL.get (GL.linkStatus shader)
+    status <- gl $ GL.get (GL.linkStatus program)
     unless status $ do
-        infoLog <- gl $ GL.get (GL.programInfoLog shader)
+        infoLog <- gl $ GL.get (GL.programInfoLog program)
         putStrLn ("[INFOLOG] " ++ infoLog)
     return program
 
@@ -81,7 +81,7 @@ startup _ = do
     win <- liftIO $ setupWindow (Box (Point 50) (Point2 640 360)) "Game"
     objs <- liftIO setupVertices
     liftIO initShaderProgram
-    gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
+    liftIO $ gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
     liftIO (GL.clearColor $= GL.Color4 0 0 0 0)
     listen TickEvent (render win objs)
     listen ShutdownEvent (shutdown win)
