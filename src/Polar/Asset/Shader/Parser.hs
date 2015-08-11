@@ -26,6 +26,7 @@ parseAST (t : _) = Left ("unexpected token (" ++ show t ++ ")")
 parseStatements :: [Token] -> Either String ([AST], [Token])
 parseStatements [] = return ([], [])
 parseStatements (StatementEndT : ts) = parseStatements ts
+parseStatements (NewLineT : ts) = parseStatements ts
 parseStatements ts = do
     (ast, ts') <- parseAST ts
     (asts, rest) <- parseStatements ts'
@@ -41,6 +42,7 @@ parseFunction (t : _) = Left ("unexpected token (" ++ show t ++ ")")
 
 parse :: [Token] -> Either String (M.Map String [AST])
 parse [] = return M.empty
+parse (NewLineT : ts) = parse ts
 parse ts = do
     (name, asts, rest) <- parseFunction ts
     liftM (M.insert name asts) (parse rest)

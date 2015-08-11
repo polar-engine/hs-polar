@@ -1,6 +1,7 @@
 module Polar.Asset.Shader.Types where
 
 data Token = EqualsT
+           | NewLineT
            | BraceOpenT
            | BraceCloseT
            | StatementEndT
