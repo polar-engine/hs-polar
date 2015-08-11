@@ -80,14 +80,13 @@ setupShader' fns
     | M.notMember "pixel" fns  = putStrLn "[ERROR] shader does not have function `pixel`"
     | otherwise = do
         putStrLn header
-        print (showStatement names line)
+        print (showFunction names "main" (fns M.! "vertex"))
   where header = unlines
             [ "#version 150"
             , "#extension GL_ARB_explicit_attrib_location: enable"
             , "precision highp float;"
             ]
-        line = head (fns M.! "vertex")
-        names = M.singleton "vertex" 4
+        names = M.singleton "vertex" 2
 
 initShaderProgram :: IO ()
 initShaderProgram = do
