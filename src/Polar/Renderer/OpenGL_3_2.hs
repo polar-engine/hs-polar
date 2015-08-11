@@ -3,6 +3,7 @@
 module Polar.Renderer.OpenGL_3_2 where
 
 import qualified Data.ByteString as BS
+import qualified Data.Map as M
 import Control.Monad (liftM, unless)
 import Control.Monad.State (liftIO)
 import System.IO (stderr, hPutStrLn)
@@ -16,8 +17,10 @@ import qualified Graphics.UI.GLFW as GLFW
 import Polar.Types
 import Polar.Control
 import Polar.Listener
-import Polar.Asset.Shader.Tokenizer
-import Polar.Asset.Shader.Parser
+import qualified Polar.Asset.Shader.Tokenizer as Shader
+import qualified Polar.Asset.Shader.Parser as Shader
+import qualified Polar.Asset.Shader.Types as Shader
+import Polar.Renderer.OpenGL_3_2.Shader
 
 vertices :: [GL.GLfloat]
 vertices = [ -1, -1
@@ -71,6 +74,21 @@ setupProgram shaders = do
         putStrLn ("[INFOLOG] " ++ infoLog)
     return program
 
+setupShader' :: M.Map String [Shader.AST] -> IO ()
+setupShader' fns
+    | M.notMember "vertex" fns = putStrLn "[ERROR] shader does not have function `vertex`"
+    | M.notMember "pixel" fns  = putStrLn "[ERROR] shader does not have function `pixel`"
+    | otherwise = do
+        putStrLn header
+        print (showStatement names line)
+  where header = unlines
+            [ "#version 150"
+            , "#extension GL_ARB_explicit_attrib_location: enable"
+            , "precision highp float;"
+            ]
+        line = head (fns M.! "vertex")
+        names = M.singleton "vertex" 4
+
 initShaderProgram :: IO ()
 initShaderProgram = do
     vsh <- setupShader "shader.vsh" GL.VertexShader
@@ -78,11 +96,11 @@ initShaderProgram = do
     program <- setupProgram [vsh, fsh]
     gl (GL.currentProgram $= Just program)
 
-    liftM tokenize (readFile "main.shader") >>= \case
-        Left err -> print ("[ERROR] " ++ err)
-        Right ts -> case parse ts of
-            Left err  -> print ("[ERROR] " ++ err)
-            Right fns -> print fns
+    liftM Shader.tokenize (readFile "main.shader") >>= \case
+        Left err -> print ("[ERROR] failed to tokenize shader (" ++ err ++ ")")
+        Right ts -> case Shader.parse ts of
+            Left err  -> print ("[ERROR] failed to parse shader (" ++ err ++")")
+            Right fns -> setupShader' fns
 
 startup :: Listener
 startup _ = do
