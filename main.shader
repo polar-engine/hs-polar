@@ -1,7 +1,7 @@
 vertex {
-	position = vertex 0 1;
+	position = vertex 0 1
 }
 
 pixel {
-	color = 1 0 0 1;
+	color = 1 0 0 1
 }

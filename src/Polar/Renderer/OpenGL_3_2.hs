@@ -3,7 +3,7 @@
 module Polar.Renderer.OpenGL_3_2 where
 
 import qualified Data.ByteString as BS
-import Control.Monad (unless)
+import Control.Monad (liftM, unless)
 import Control.Monad.State (liftIO)
 import System.IO (stderr, hPutStrLn)
 import Foreign (nullPtr)
@@ -16,6 +16,8 @@ import qualified Graphics.UI.GLFW as GLFW
 import Polar.Types
 import Polar.Control
 import Polar.Listener
+import Polar.Asset.Shader.Tokenizer
+import Polar.Asset.Shader.Parser
 
 vertices :: [GL.GLfloat]
 vertices = [ -1, -1
@@ -75,6 +77,12 @@ initShaderProgram = do
     fsh <- setupShader "shader.fsh" GL.FragmentShader
     program <- setupProgram [vsh, fsh]
     gl (GL.currentProgram $= Just program)
+
+    liftM tokenize (readFile "main.shader") >>= \case
+        Left err -> print ("[ERROR] " ++ err)
+        Right ts -> case parse ts of
+            Left err  -> print ("[ERROR] " ++ err)
+            Right fns -> print fns
 
 startup :: Listener
 startup _ = do

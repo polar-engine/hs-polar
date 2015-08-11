@@ -1,9 +1,15 @@
 module Polar.Asset.Shader.Types where
 
-data Token = Equals
-           | BraceOpen
-           | BraceClose
-           | StatementEnd
-           | Identifier String
-           | Literal Double
-             deriving Show
+data Token = EqualsT
+           | BraceOpenT
+           | BraceCloseT
+           | StatementEndT
+           | IdentifierT String
+           | LiteralT Double
+             deriving (Eq, Show)
+
+data AST = Assignment String AST
+         | Swizzle [AST]
+         | Identifier String
+         | Literal Double
+           deriving Show
