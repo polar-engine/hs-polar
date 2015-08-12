@@ -34,3 +34,21 @@ showFunction names name asts = do
     return (start ++ concat statements ++ end)
   where start = "void " ++ name ++ "(){"
         end = "}"
+
+showShaders :: M.Map String Int -> M.Map String [AST] -> Either String (String, String)
+showShaders names fns
+    | M.notMember "vertex" fns = Left "shader does not have function `vertex`"
+    | M.notMember "pixel" fns  = Left "shader does not have function `pixel`"
+    | otherwise = do
+        vertex <- showFunction names "main" (fns M.! "vertex")
+        pixel <- showFunction names "main" (fns M.! "pixel")
+        return (vertexHeader ++ vertex, pixelHeader ++ pixel)
+  where vertexHeader = unlines
+            [ "#version 150"
+            , "#extension GL_ARB_explicit_attrib_location: enable"
+            , "precision highp float;"
+            ]
+        pixelHeader = unlines
+            [ "#version 150"
+            , "precision highp float;"
+            ]

@@ -75,18 +75,10 @@ setupProgram shaders = do
     return program
 
 setupShader' :: M.Map String [Shader.AST] -> IO ()
-setupShader' fns
-    | M.notMember "vertex" fns = putStrLn "[ERROR] shader does not have function `vertex`"
-    | M.notMember "pixel" fns  = putStrLn "[ERROR] shader does not have function `pixel`"
-    | otherwise = do
-        putStrLn header
-        print (showFunction names "main" (fns M.! "vertex"))
-  where header = unlines
-            [ "#version 150"
-            , "#extension GL_ARB_explicit_attrib_location: enable"
-            , "precision highp float;"
-            ]
-        names = M.singleton "vertex" 2
+setupShader' fns = case showShaders names fns of
+    Left err              -> putStrLn ("[ERROR] " ++ err)
+    Right (vertex, pixel) -> putStrLn ("[VERTEX]\n" ++ vertex ++ "\n[PIXEL]\n" ++ pixel)
+  where names = M.fromList [("vertex", 2), ("color", 4)]
 
 initShaderProgram :: IO ()
 initShaderProgram = do
