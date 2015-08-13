@@ -10,28 +10,24 @@ import Polar.Asset.Shader.Tokenizer
 import Polar.Asset.Shader.Parser
 import Polar.Asset.Shader.Types
 
-data ShaderEnv = ShaderEnv
-    { functions :: M.Map String [AST]
-    }
-
-defaultShaderEnv :: ShaderEnv
-defaultShaderEnv = ShaderEnv
-    { functions = M.empty
-    }
-
 astComponents' :: AST -> State ShaderEnv Int
 astComponents' (Assignment name _) = astComponents' (Identifier name)
 astComponents' (Swizzle asts) = liftM (foldr (+) 0) (mapM astComponents' asts)
 astComponents' (Identifier "position") = return 4
-astComponents' (Identifier name) = fail ("unrecognized name (" ++ name ++ ")")
---astComponents' (Identifier name) = case M.lookup name names of
---    Nothing -> Left ("unrecognized name (" ++ name ++ ")")
---    Just x  -> return x
+astComponents' (Identifier name) = liftM (M.lookup name) (gets inputs) >>= \case
+    Just x  -> return x
+    Nothing -> liftM (M.lookup name) (gets outputs) >>= \case
+        Just x -> return x
+        Nothing -> fail ("unrecognized name (" ++ name ++ ")")
 astComponents' (Literal _) = return 1
 
 resolveName' :: String -> State ShaderEnv String
 resolveName' "position" = return "gl_Position"
-resolveName' name = fail ("unrecognized name(" ++ name ++ ")")
+resolveName' name = liftM (M.lookup name) (gets inputs) >>= \case
+    Just _  -> return ("a_" ++ name)
+    Nothing -> liftM (M.lookup name) (gets outputs) >>= \case
+        Just _ -> return ("o_" ++ name)
+        Nothing -> fail ("unrecognized name (" ++ name ++ ")")
 
 showAST' :: AST -> State ShaderEnv String
 showAST'(Assignment name ast) = do

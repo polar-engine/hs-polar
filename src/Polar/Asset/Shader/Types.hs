@@ -18,6 +18,19 @@ data AST = Assignment String AST
          | Literal Double
            deriving Show
 
+data ShaderEnv = ShaderEnv
+    { functions :: M.Map String [AST]
+    , inputs    :: M.Map String Int
+    , outputs   :: M.Map String Int
+    }
+
+defaultShaderEnv :: ShaderEnv
+defaultShaderEnv = ShaderEnv
+    { functions = M.empty
+    , inputs    = M.empty
+    , outputs   = M.empty
+    }
+
 astComponents :: M.Map String Int -> AST -> Either String Int
 astComponents names (Assignment name _) = astComponents names (Identifier name)
 astComponents names (Swizzle asts) = liftM (foldr (+) 0) (mapM (astComponents names) asts)

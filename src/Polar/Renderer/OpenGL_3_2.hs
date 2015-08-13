@@ -19,7 +19,7 @@ import Polar.Control
 import Polar.Listener
 import qualified Polar.Asset.Shader.Tokenizer as Shader
 import qualified Polar.Asset.Shader.Parser as Shader
-import qualified Polar.Asset.Shader.Types as Shader
+import Polar.Asset.Shader.Types as Shader
 import Polar.Renderer.OpenGL_3_2.Shader
 
 vertices :: [GL.GLfloat]
@@ -76,8 +76,13 @@ setupProgram shaders = do
 
 setupShader' :: M.Map String [Shader.AST] -> IO ()
 setupShader' fns = putStrLn ("[VERTEX]\n" ++ vertex ++ "\n[PIXEL]\n" ++ pixel)
-  where (vertex, pixel) = evalState showShaders' defaultShaderEnv { functions = fns }
-        names = M.fromList [("vertex", 2), ("color", 4)]
+  where ins  = M.fromList [("vertex", 2)]
+        outs = M.fromList [("color", 4)]
+        (vertex, pixel) = evalState showShaders' defaultShaderEnv
+            { functions = fns
+            , inputs    = ins
+            , outputs   = outs
+            }
 
 initShaderProgram :: IO ()
 initShaderProgram = do
