@@ -1,7 +1,6 @@
 module Polar.Asset.Shader.Types where
 
 import qualified Data.Map as M
-import Control.Monad (liftM)
 
 data Token = EqualsT
            | NewLineT
@@ -21,24 +20,20 @@ data AST = Assignment String AST
 data ShaderType = Vertex | Pixel
 
 data ShaderEnv = ShaderEnv
-    { functions   :: M.Map String [AST]
-    , inputs      :: M.Map String Int
-    , outputs     :: M.Map String Int
-    , currentType :: Maybe ShaderType
+    { functions      :: M.Map String [AST]
+    , currentType    :: Maybe ShaderType
+    , inputs         :: M.Map String Int
+    , outputs        :: M.Map String Int
+    , visitedInputs  :: [String]
+    , visitedOutputs :: [String]
     }
 
 defaultShaderEnv :: ShaderEnv
 defaultShaderEnv = ShaderEnv
-    { functions   = M.empty
-    , inputs      = M.empty
-    , outputs     = M.empty
-    , currentType = Nothing
+    { functions      = M.empty
+    , currentType    = Nothing
+    , inputs         = M.empty
+    , outputs        = M.empty
+    , visitedInputs  = []
+    , visitedOutputs = []
     }
-
-astComponents :: M.Map String Int -> AST -> Either String Int
-astComponents names (Assignment name _) = astComponents names (Identifier name)
-astComponents names (Swizzle asts) = liftM (foldr (+) 0) (mapM (astComponents names) asts)
-astComponents names (Identifier name) = case M.lookup name names of
-    Nothing -> Left ("unrecognized name (" ++ name ++ ")")
-    Just x  -> return x
-astComponents _ (Literal _) = return 1

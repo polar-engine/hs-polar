@@ -78,11 +78,8 @@ setupShader' :: M.Map String [Shader.AST] -> IO ()
 setupShader' fns = putStrLn ("[VERTEX]\n" ++ vertex ++ "\n[PIXEL]\n" ++ pixel)
   where ins  = M.fromList [("vertex", 2)]
         outs = M.fromList [("color", 4)]
-        (vertex, pixel) = evalState showShaders' defaultShaderEnv
-            { functions = fns
-            , inputs    = ins
-            , outputs   = outs
-            }
+        (vertex, pixel) = evalState showShaders defaultShaderEnv
+            { functions = fns, inputs = ins, outputs = outs }
 
 initShaderProgram :: IO ()
 initShaderProgram = do
