@@ -5,7 +5,7 @@ module Polar.Renderer.OpenGL_3_2 where
 import qualified Data.ByteString as BS
 import qualified Data.Map as M
 import Control.Monad (liftM, unless)
-import Control.Monad.State (liftIO)
+import Control.Monad.State (evalState, liftIO)
 import System.IO (stderr, hPutStrLn)
 import Foreign (nullPtr)
 import Foreign.Storable (sizeOf)
@@ -75,10 +75,9 @@ setupProgram shaders = do
     return program
 
 setupShader' :: M.Map String [Shader.AST] -> IO ()
-setupShader' fns = case showShaders names fns of
-    Left err              -> putStrLn ("[ERROR] " ++ err)
-    Right (vertex, pixel) -> putStrLn ("[VERTEX]\n" ++ vertex ++ "\n[PIXEL]\n" ++ pixel)
-  where names = M.fromList [("vertex", 2), ("color", 4)]
+setupShader' fns = putStrLn ("[VERTEX]\n" ++ vertex ++ "\n[PIXEL]\n" ++ pixel)
+  where (vertex, pixel) = evalState showShaders' defaultShaderEnv { functions = fns }
+        names = M.fromList [("vertex", 2), ("color", 4)]
 
 initShaderProgram :: IO ()
 initShaderProgram = do
