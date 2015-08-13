@@ -18,17 +18,21 @@ data AST = Assignment String AST
          | Literal Double
            deriving Show
 
+data ShaderType = Vertex | Pixel
+
 data ShaderEnv = ShaderEnv
-    { functions :: M.Map String [AST]
-    , inputs    :: M.Map String Int
-    , outputs   :: M.Map String Int
+    { functions   :: M.Map String [AST]
+    , inputs      :: M.Map String Int
+    , outputs     :: M.Map String Int
+    , currentType :: Maybe ShaderType
     }
 
 defaultShaderEnv :: ShaderEnv
 defaultShaderEnv = ShaderEnv
-    { functions = M.empty
-    , inputs    = M.empty
-    , outputs   = M.empty
+    { functions   = M.empty
+    , inputs      = M.empty
+    , outputs     = M.empty
+    , currentType = Nothing
     }
 
 astComponents :: M.Map String Int -> AST -> Either String Int

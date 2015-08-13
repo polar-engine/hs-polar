@@ -13,21 +13,32 @@ import Polar.Asset.Shader.Types
 astComponents' :: AST -> State ShaderEnv Int
 astComponents' (Assignment name _) = astComponents' (Identifier name)
 astComponents' (Swizzle asts) = liftM (foldr (+) 0) (mapM astComponents' asts)
-astComponents' (Identifier "position") = return 4
-astComponents' (Identifier name) = liftM (M.lookup name) (gets inputs) >>= \case
-    Just x  -> return x
-    Nothing -> liftM (M.lookup name) (gets outputs) >>= \case
-        Just x -> return x
-        Nothing -> fail ("unrecognized name (" ++ name ++ ")")
+astComponents' (Identifier name) = gets currentType >>= \case
+    Just Vertex -> case name of
+        "position" -> return 4
+        _          -> liftM (M.lookup name) (gets inputs) >>= \case
+            Just x  -> return x
+            Nothing -> unrecognized
+    Just Pixel  -> liftM (M.lookup name) (gets outputs) >>= \case
+        Just x  -> return x
+        Nothing -> unrecognized
+    Nothing     -> unrecognized
+  where unrecognized = fail ("unrecognized name (" ++ name ++ ")")
 astComponents' (Literal _) = return 1
 
 resolveName' :: String -> State ShaderEnv String
 resolveName' "position" = return "gl_Position"
-resolveName' name = liftM (M.lookup name) (gets inputs) >>= \case
-    Just _  -> return ("a_" ++ name)
-    Nothing -> liftM (M.lookup name) (gets outputs) >>= \case
-        Just _ -> return ("o_" ++ name)
-        Nothing -> fail ("unrecognized name (" ++ name ++ ")")
+resolveName' name = gets currentType >>= \case
+    Just Vertex -> case name of
+        "position" -> return "gl_Position"
+        _          -> liftM (M.lookup name) (gets inputs) >>= \case
+            Just _  -> return ("a_" ++ name)
+            Nothing -> unrecognized
+    Just Pixel  -> liftM (M.lookup name) (gets outputs) >>= \case
+        Just _  -> return ("o_" ++ name)
+        Nothing -> unrecognized
+    Nothing     -> unrecognized
+  where unrecognized = fail ("unrecognized name (" ++ name ++ ")")
 
 showAST' :: AST -> State ShaderEnv String
 showAST'(Assignment name ast) = do
@@ -55,7 +66,9 @@ showFunction' name mActualName = liftM (M.lookup name) (gets functions) >>= \cas
 
 showShaders' :: State ShaderEnv (String, String)
 showShaders' = do
+    modify (\env -> env { currentType = Just Vertex })
     vertex <- showFunction' "vertex" (Just "main")
+    modify (\env -> env { currentType = Just Pixel })
     pixel <- showFunction' "pixel" (Just "main")
     return (version ++ vertex, version ++ pixel)
   where version = "#version 150\n"
