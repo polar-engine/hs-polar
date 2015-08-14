@@ -5,11 +5,14 @@ module Polar.Renderer.OpenGL_3_2.Shader where
 import Data.Maybe (fromMaybe)
 import Data.List (nub, intercalate)
 import qualified Data.Map as M
-import Control.Applicative ((<$>), <*>)
+import Control.Applicative ((<$>), (<*>))
 import Control.Monad.State
 import Polar.Asset.Shader.Tokenizer
 import Polar.Asset.Shader.Parser
 import Polar.Asset.Shader.Types
+
+unrecognized :: Monad m => String -> m a
+unrecognized name = fail ("unrecognized name (" ++ name ++ ")")
 
 astComponents :: AST -> State ShaderEnv Int
 astComponents (Assignment name _) = astComponents (Identifier name)
@@ -19,12 +22,11 @@ astComponents (Identifier name) = gets currentType >>= \case
         "position" -> return 4
         _          -> M.lookup name <$> gets inputs >>= \case
             Just x  -> return x
-            Nothing -> unrecognized
+            Nothing -> unrecognized name
     Just Pixel  -> M.lookup name <$> gets outputs >>= \case
         Just x  -> return x
-        Nothing -> unrecognized
-    Nothing     -> unrecognized
-  where unrecognized = fail ("unrecognized name (" ++ name ++ ")")
+        Nothing -> unrecognized name
+    Nothing     -> unrecognized name
 astComponents (Literal _) = return 1
 
 showName :: String -> State ShaderEnv String
@@ -36,14 +38,13 @@ showName name = gets currentType >>= \case
             Just _  -> do
                 modify (\env -> env { visitedInputs = name : visitedInputs env })
                 return ("a_" ++ name)
-            Nothing -> unrecognized
+            Nothing -> unrecognized name
     Just Pixel  -> M.lookup name <$> gets outputs >>= \case
         Just _  -> do
             modify (\env -> env { visitedOutputs = name : visitedOutputs env })
             return ("o_" ++ name)
-        Nothing -> unrecognized
-    Nothing     -> unrecognized
-  where unrecognized = fail ("unrecognized name (" ++ name ++ ")")
+        Nothing -> unrecognized name
+    Nothing     -> unrecognized name
 
 showAST :: AST -> State ShaderEnv String
 showAST (Assignment name ast) = do
@@ -64,7 +65,7 @@ showStatement ast = (++ ";") <$> showAST ast
 
 showFunction :: String -> Maybe String -> State ShaderEnv String
 showFunction name mActualName = M.lookup name <$> gets functions >>= \case
-    Nothing -> fail ("unrecognized function name (" ++ name ++ ")")
+    Nothing -> unrecognized name
     Just asts -> do
         statements <- mapM showStatement asts
         return ("void " ++ fromMaybe name mActualName ++ "(){" ++ concat statements ++ "}")
