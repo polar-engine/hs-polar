@@ -20,17 +20,12 @@ astComponents (Swizzle asts) = foldr (+) 0 <$> mapM astComponents asts
 astComponents (Identifier name) = gets currentType >>= \case
     Just Vertex -> case name of
         "position" -> return 4
-        _          -> M.lookup name <$> gets inputs >>= \case
-            Just x  -> return x
-            Nothing -> unrecognized name
-    Just Pixel  -> M.lookup name <$> gets outputs >>= \case
-        Just x  -> return x
-        Nothing -> unrecognized name
+        _          -> M.lookup name <$> gets inputs >>= maybe (unrecognized name) return
+    Just Pixel  -> M.lookup name <$> gets outputs >>= maybe (unrecognized name) return
     Nothing     -> unrecognized name
 astComponents (Literal _) = return 1
 
 showName :: String -> State ShaderEnv String
-showName "position" = return "gl_Position"
 showName name = gets currentType >>= \case
     Just Vertex -> case name of
         "position" -> return "gl_Position"
