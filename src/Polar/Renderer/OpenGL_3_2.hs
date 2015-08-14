@@ -77,9 +77,9 @@ setupProgram shaders = do
 
 initShaderProgram :: IO ()
 initShaderProgram = Shader.tokenize <$> readFile "main.shader" >>= \case
-    Left err -> print ("[ERROR] failed to tokenize shader (" ++ err ++ ")")
+    Left err -> putStrLn ("[ERROR] failed to tokenize shader (" ++ err ++ ")")
     Right ts -> case Shader.parse ts of
-        Left err  -> print ("[ERROR] failed to parse shader (" ++ err ++")")
+        Left err  -> putStrLn ("[ERROR] failed to parse shader (" ++ err ++")")
         Right fns -> do
             let result = runStateT showShaders defaultShaderEnv
                     { functions = fns
@@ -87,7 +87,7 @@ initShaderProgram = Shader.tokenize <$> readFile "main.shader" >>= \case
                     , outputs   = M.fromList [("color", 4)]
                     }
             case result of
-                Left err -> print ("[ERROR] failed to process shader (" ++ err ++ ")")
+                Left err -> putStrLn ("[ERROR] failed to process shader (" ++ err ++ ")")
                 Right ((vertex, pixel), _) -> do
                     vsh <- setupShader vertex GL.VertexShader
                     fsh <- setupShader pixel GL.FragmentShader
