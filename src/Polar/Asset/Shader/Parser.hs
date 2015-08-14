@@ -3,7 +3,7 @@
 module Polar.Asset.Shader.Parser where
 
 import qualified Data.Map as M
-import Control.Monad (liftM)
+import Control.Applicative ((<$>))
 import Polar.Asset.Shader.Types
 
 parseAST :: [Token] -> Either String (AST, [Token])
@@ -45,4 +45,4 @@ parse [] = return M.empty
 parse (NewLineT : ts) = parse ts
 parse ts = do
     (name, asts, rest) <- parseFunction ts
-    liftM (M.insert name asts) (parse rest)
+    M.insert name asts <$> parse rest
