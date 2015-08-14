@@ -4,8 +4,9 @@ module Polar.Renderer.OpenGL_3_2 where
 
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as M
-import Control.Monad (liftM, unless)
-import Control.Monad.State (evalState, liftIO)
+import Control.Applicative ((<$>))
+import Control.Monad (unless)
+import Control.Monad.State (liftIO, runStateT)
 import System.IO (stderr, hPutStrLn)
 import Foreign (nullPtr)
 import Foreign.Storable (sizeOf)
@@ -75,20 +76,23 @@ setupProgram shaders = do
     return program
 
 initShaderProgram :: IO ()
-initShaderProgram = liftM Shader.tokenize (readFile "main.shader") >>= \case
+initShaderProgram = Shader.tokenize <$> readFile "main.shader" >>= \case
     Left err -> print ("[ERROR] failed to tokenize shader (" ++ err ++ ")")
     Right ts -> case Shader.parse ts of
         Left err  -> print ("[ERROR] failed to parse shader (" ++ err ++")")
         Right fns -> do
-            let (vertex, pixel) = evalState showShaders defaultShaderEnv
+            let result = runStateT showShaders defaultShaderEnv
                     { functions = fns
                     , inputs    = M.fromList [("vertex", 2)]
                     , outputs   = M.fromList [("color", 4)]
                     }
-            vsh <- setupShader vertex GL.VertexShader
-            fsh <- setupShader pixel GL.FragmentShader
-            program <- setupProgram [vsh, fsh]
-            gl (GL.currentProgram $= Just program)
+            case result of
+                Left err -> print ("[ERROR] failed to process shader (" ++ err ++ ")")
+                Right ((vertex, pixel), _) -> do
+                    vsh <- setupShader vertex GL.VertexShader
+                    fsh <- setupShader pixel GL.FragmentShader
+                    program <- setupProgram [vsh, fsh]
+                    gl (GL.currentProgram $= Just program)
 
 startup :: Listener
 startup _ = do

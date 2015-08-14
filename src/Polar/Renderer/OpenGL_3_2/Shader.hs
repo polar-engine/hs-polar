@@ -6,15 +6,13 @@ import Data.Maybe (fromMaybe)
 import Data.List (nub, intercalate)
 import qualified Data.Map as M
 import Control.Applicative ((<$>), (<*>))
-import Control.Monad.State
-import Polar.Asset.Shader.Tokenizer
-import Polar.Asset.Shader.Parser
+import Control.Monad.State (gets, modify, lift)
 import Polar.Asset.Shader.Types
 
-unrecognized :: Monad m => String -> m a
-unrecognized name = fail ("unrecognized name (" ++ name ++ ")")
+unrecognized :: String -> ShaderM a
+unrecognized name = lift $ Left ("unrecognized name (" ++ name ++ ")")
 
-astComponents :: AST -> State ShaderEnv Int
+astComponents :: AST -> ShaderM Int
 astComponents (Assignment name _) = astComponents (Identifier name)
 astComponents (Swizzle asts) = foldr (+) 0 <$> mapM astComponents asts
 astComponents (Identifier name) = gets currentType >>= \case
@@ -25,7 +23,7 @@ astComponents (Identifier name) = gets currentType >>= \case
     Nothing     -> unrecognized name
 astComponents (Literal _) = return 1
 
-showName :: String -> State ShaderEnv String
+showName :: String -> ShaderM String
 showName name = gets currentType >>= \case
     Just Vertex -> case name of
         "position" -> return "gl_Position"
@@ -41,7 +39,7 @@ showName name = gets currentType >>= \case
         Nothing -> unrecognized name
     Nothing     -> unrecognized name
 
-showAST :: AST -> State ShaderEnv String
+showAST :: AST -> ShaderM String
 showAST (Assignment name ast) = do
     rhs <- showAST ast
     lhs <- showAST (Identifier name)
@@ -55,17 +53,17 @@ showAST ast@(Swizzle asts) = do
 showAST (Identifier name) = showName name
 showAST (Literal literal) = return (show literal)
 
-showStatement :: AST -> State ShaderEnv String
+showStatement :: AST -> ShaderM String
 showStatement ast = (++ ";") <$> showAST ast
 
-showFunction :: String -> Maybe String -> State ShaderEnv String
+showFunction :: String -> Maybe String -> ShaderM String
 showFunction name mActualName = M.lookup name <$> gets functions >>= \case
     Nothing -> unrecognized name
     Just asts -> do
         statements <- mapM showStatement asts
         return ("void " ++ fromMaybe name mActualName ++ "(){" ++ concat statements ++ "}")
 
-showIns :: State ShaderEnv [String]
+showIns :: ShaderM [String]
 showIns = nub <$> gets visitedInputs >>= f 0
   where f _ [] = return []
         f n (x:xs) = do
@@ -73,7 +71,7 @@ showIns = nub <$> gets visitedInputs >>= f 0
             rest <- f (succ n) xs
             return $ ("layout(location=" ++ show n ++ ")in vec" ++ show c ++ " a_" ++ x ++ ";") : rest
 
-showOuts :: State ShaderEnv [String]
+showOuts :: ShaderM [String]
 showOuts = nub <$> gets visitedOutputs >>= f 0
   where f _ [] = return []
         f n (x:xs) = do
@@ -81,7 +79,7 @@ showOuts = nub <$> gets visitedOutputs >>= f 0
             rest <- f (succ n) xs
             return $ ("out vec" ++ show c ++ " o_" ++ x ++ ";") : rest
 
-showShaders :: State ShaderEnv (String, String)
+showShaders :: ShaderM (String, String)
 showShaders = do
     modify (\env -> env { currentType = Just Vertex, visitedInputs = [] })
     vertex <- showFunction "vertex" (Just "main")

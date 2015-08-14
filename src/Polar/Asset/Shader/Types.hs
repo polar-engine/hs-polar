@@ -1,6 +1,7 @@
 module Polar.Asset.Shader.Types where
 
 import qualified Data.Map as M
+import Control.Monad.State (StateT)
 
 data Token = EqualsT
            | NewLineT
@@ -37,3 +38,5 @@ defaultShaderEnv = ShaderEnv
     , visitedInputs  = []
     , visitedOutputs = []
     }
+
+type ShaderM = StateT ShaderEnv (Either String)
