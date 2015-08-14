@@ -2,7 +2,7 @@
 
 module Polar.Renderer.OpenGL_3_2 where
 
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as M
 import Control.Monad (liftM, unless)
 import Control.Monad.State (evalState, liftIO)
@@ -53,9 +53,9 @@ setupVertices = do
     return (vao, vbo)
 
 setupShader :: String -> GL.ShaderType -> IO GL.Shader
-setupShader path shaderType= do
+setupShader contents shaderType= do
     shader <- gl (GL.createShader shaderType)
-    BS.readFile path >>= gl . (GL.shaderSourceBS shader $=)
+    gl (GL.shaderSourceBS shader $= BS.pack contents)
     gl (GL.compileShader shader)
     status <- gl $ GL.get (GL.compileStatus shader)
     unless status $ do
@@ -74,25 +74,21 @@ setupProgram shaders = do
         putStrLn ("[INFOLOG] " ++ infoLog)
     return program
 
-setupShader' :: M.Map String [Shader.AST] -> IO ()
-setupShader' fns = putStrLn ("[VERTEX]\n" ++ vertex ++ "\n[PIXEL]\n" ++ pixel)
-  where ins  = M.fromList [("vertex", 2)]
-        outs = M.fromList [("color", 4)]
-        (vertex, pixel) = evalState showShaders defaultShaderEnv
-            { functions = fns, inputs = ins, outputs = outs }
-
 initShaderProgram :: IO ()
-initShaderProgram = do
-    vsh <- setupShader "shader.vsh" GL.VertexShader
-    fsh <- setupShader "shader.fsh" GL.FragmentShader
-    program <- setupProgram [vsh, fsh]
-    gl (GL.currentProgram $= Just program)
-
-    liftM Shader.tokenize (readFile "main.shader") >>= \case
-        Left err -> print ("[ERROR] failed to tokenize shader (" ++ err ++ ")")
-        Right ts -> case Shader.parse ts of
-            Left err  -> print ("[ERROR] failed to parse shader (" ++ err ++")")
-            Right fns -> setupShader' fns
+initShaderProgram = liftM Shader.tokenize (readFile "main.shader") >>= \case
+    Left err -> print ("[ERROR] failed to tokenize shader (" ++ err ++ ")")
+    Right ts -> case Shader.parse ts of
+        Left err  -> print ("[ERROR] failed to parse shader (" ++ err ++")")
+        Right fns -> do
+            let (vertex, pixel) = evalState showShaders defaultShaderEnv
+                    { functions = fns
+                    , inputs    = M.fromList [("vertex", 2)]
+                    , outputs   = M.fromList [("color", 4)]
+                    }
+            vsh <- setupShader vertex GL.VertexShader
+            fsh <- setupShader pixel GL.FragmentShader
+            program <- setupProgram [vsh, fsh]
+            gl (GL.currentProgram $= Just program)
 
 startup :: Listener
 startup _ = do
