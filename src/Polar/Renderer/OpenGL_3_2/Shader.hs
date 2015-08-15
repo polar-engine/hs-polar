@@ -53,15 +53,12 @@ showAST ast@(Swizzle asts) = do
 showAST (Identifier name) = showName name
 showAST (Literal literal) = return (show literal)
 
-showStatement :: AST -> ShaderM String
-showStatement ast = (++ ";") <$> showAST ast
-
 showFunction :: String -> Maybe String -> ShaderM String
 showFunction name mActualName = M.lookup name <$> asks functions >>= \case
     Nothing -> unrecognized name
     Just asts -> do
-        statements <- mapM showStatement asts
-        return ("void " ++ fromMaybe name mActualName ++ "(){" ++ concat statements ++ "}")
+        statements <- mapM showAST asts
+        return ("void " ++ fromMaybe name mActualName ++ "(){" ++ concatMap (++ ";") statements ++ "}")
 
 showIns :: ShaderM [String]
 showIns = nub <$> gets visitedInputs >>= f 0
