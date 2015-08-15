@@ -19,10 +19,10 @@ import qualified Graphics.UI.GLFW as GLFW
 import Polar.Types
 import Polar.Control
 import Polar.Listener
-import qualified Polar.Asset.Shader.Tokenizer as Shader
-import qualified Polar.Asset.Shader.Parser as Shader
-import qualified Polar.Asset.Shader.Processor as Shader
-import Polar.Asset.Shader.Types as Shader
+import Polar.Asset.Shader.Tokenizer (tokenize)
+import Polar.Asset.Shader.Parser (parse)
+import Polar.Asset.Shader.Processor (process)
+import qualified Polar.Asset.Shader.Processor as Processor
 import Polar.Renderer.OpenGL_3_2.Shader
 
 vertices :: [GL.GLfloat]
@@ -86,17 +86,17 @@ initShaderProgram = f <$> readFile "main.shader" >>= \case
         program <- setupProgram [vsh, fsh]
         gl (GL.currentProgram $= Just program)
   where f contents = do
-            fns <- Shader.tokenize contents >>= Shader.parse
-            (_, _, (ins, outs)) <- runRWST Shader.process Shader.ProcessorEnv
-                { Shader.envFunctions = fns
-                , Shader.envInputs    = M.fromList [("vertex", 2)]
-                , Shader.envOutputs   = M.fromList [("color", 4)]
+            fns <- tokenize contents >>= parse
+            (_, _, (ins, outs)) <- runRWST process Processor.ProcessorEnv
+                { Processor.envFunctions = fns
+                , Processor.envInputs    = M.fromList [("vertex", 2)]
+                , Processor.envOutputs   = M.fromList [("color", 4)]
                 } Nothing
             (\(s, _, _) -> s) <$> runRWST showShaders ShaderEnv
-                { functions = fns
-                , inputs    = M.fromList (nub ins)
-                , outputs   = M.fromList (nub outs)
-                } defaultShaderState
+                { envFunctions = fns
+                , envInputs    = M.fromList (nub ins)
+                , envOutputs   = M.fromList (nub outs)
+                } Nothing
 
 startup :: Listener
 startup _ = do

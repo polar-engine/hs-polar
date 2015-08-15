@@ -6,8 +6,17 @@ import Data.Maybe (fromMaybe)
 import Data.List (nub, intercalate)
 import qualified Data.Map as M
 import Control.Applicative ((<$>), (<*>))
-import Control.Monad.RWS (asks, gets, modify, lift)
+import Control.Monad.RWS (RWST, asks, get, put, modify, lift)
 import Polar.Asset.Shader.Types
+
+data ShaderEnv = ShaderEnv
+    { envFunctions      :: M.Map String [AST]
+    , envInputs         :: M.Map String Int
+    , envOutputs        :: M.Map String Int
+    }
+type ShaderState = Maybe ShaderType
+type ShaderOutput = String
+type ShaderM = RWST ShaderEnv () ShaderState (Either String)
 
 unrecognized :: String -> ShaderM a
 unrecognized name = lift $ Left ("unrecognized name (" ++ name ++ ")")
@@ -15,27 +24,23 @@ unrecognized name = lift $ Left ("unrecognized name (" ++ name ++ ")")
 astComponents :: AST -> ShaderM Int
 astComponents (Assignment name _) = astComponents (Identifier name)
 astComponents (Swizzle asts) = foldr (+) 0 <$> mapM astComponents asts
-astComponents (Identifier name) = gets currentType >>= \case
+astComponents (Identifier name) = get >>= \case
     Just Vertex -> case name of
         "position" -> return 4
-        _          -> M.lookup name <$> asks inputs >>= maybe (unrecognized name) return
-    Just Pixel  -> M.lookup name <$> asks outputs >>= maybe (unrecognized name) return
+        _          -> M.lookup name <$> asks envInputs >>= maybe (unrecognized name) return
+    Just Pixel  -> M.lookup name <$> asks envOutputs >>= maybe (unrecognized name) return
     Nothing     -> unrecognized name
 astComponents (Literal _) = return 1
 
 showName :: String -> ShaderM String
-showName name = gets currentType >>= \case
+showName name = get >>= \case
     Just Vertex -> case name of
         "position" -> return "gl_Position"
-        _          -> M.lookup name <$> asks inputs >>= \case
-            Just _  -> do
-                modify (\env -> env { visitedInputs = name : visitedInputs env })
-                return ("a_" ++ name)
+        _          -> M.lookup name <$> asks envInputs >>= \case
+            Just _  -> return ("a_" ++ name)
             Nothing -> unrecognized name
-    Just Pixel  -> M.lookup name <$> asks outputs >>= \case
-        Just _  -> do
-            modify (\env -> env { visitedOutputs = name : visitedOutputs env })
-            return ("o_" ++ name)
+    Just Pixel  -> M.lookup name <$> asks envOutputs >>= \case
+        Just _  -> return ("o_" ++ name)
         Nothing -> unrecognized name
     Nothing     -> unrecognized name
 
@@ -54,34 +59,32 @@ showAST (Identifier name) = showName name
 showAST (Literal literal) = return (show literal)
 
 showFunction :: String -> Maybe String -> ShaderM String
-showFunction name mActualName = M.lookup name <$> asks functions >>= \case
+showFunction name mActualName = M.lookup name <$> asks envFunctions >>= \case
     Nothing -> unrecognized name
     Just asts -> do
         statements <- mapM showAST asts
         return ("void " ++ fromMaybe name mActualName ++ "(){" ++ concatMap (++ ";") statements ++ "}")
 
 showIns :: ShaderM [String]
-showIns = nub <$> gets visitedInputs >>= f 0
+showIns = M.toList <$> asks envInputs >>= f 0
   where f _ [] = return []
-        f n (x:xs) = do
-            c <- astComponents (Identifier x)
+        f n ((x,c):xs) = do
             rest <- f (succ n) xs
             return $ ("layout(location=" ++ show n ++ ")in vec" ++ show c ++ " a_" ++ x ++ ";") : rest
 
 showOuts :: ShaderM [String]
-showOuts = nub <$> gets visitedOutputs >>= f 0
+showOuts = M.toList <$> asks envOutputs >>= f 0
   where f _ [] = return []
-        f n (x:xs) = do
-            c <- astComponents (Identifier x)
+        f n ((x,c):xs) = do
             rest <- f (succ n) xs
             return $ ("out vec" ++ show c ++ " o_" ++ x ++ ";") : rest
 
 showShaders :: ShaderM (String, String)
 showShaders = do
-    modify (\env -> env { currentType = Just Vertex, visitedInputs = [] })
+    put (Just Vertex)
     vertex <- showFunction "vertex" (Just "main")
     ins <- concat <$> showIns
-    modify (\env -> env { currentType = Just Pixel, visitedOutputs = [] })
+    put (Just Pixel)
     pixel <- showFunction "pixel" (Just "main")
     outs <- concat <$> showOuts
     return ( version ++ vExt ++ precision ++ ins ++ vertex
