@@ -3,10 +3,10 @@
 module Polar.Renderer.OpenGL_3_2.Shader where
 
 import Data.Maybe (fromMaybe)
-import Data.List (nub, intercalate)
+import Data.List (intersperse)
 import qualified Data.Map as M
 import Control.Applicative ((<$>), (<*>))
-import Control.Monad.RWS (RWST, asks, get, put, modify, lift)
+import Control.Monad.RWS (RWST, asks, tell, get, put, lift)
 import Polar.Asset.Shader.Types
 
 data ShaderEnv = ShaderEnv
@@ -15,11 +15,17 @@ data ShaderEnv = ShaderEnv
     , envOutputs        :: M.Map String Int
     }
 type ShaderState = Maybe ShaderType
-type ShaderOutput = String
-type ShaderM = RWST ShaderEnv () ShaderState (Either String)
+type ShaderOutput = (String, String)
+type ShaderM = RWST ShaderEnv ShaderOutput ShaderState (Either String)
 
 unrecognized :: String -> ShaderM a
 unrecognized name = lift $ Left ("unrecognized name (" ++ name ++ ")")
+
+tellCurrent :: String -> ShaderM ()
+tellCurrent msg = get >>= \case
+    Just Vertex -> tell (msg, "")
+    Just Pixel  -> tell ("", msg)
+    Nothing     -> lift (Left "no current shader")
 
 astComponents :: AST -> ShaderM Int
 astComponents (Assignment name _) = astComponents (Identifier name)
@@ -32,64 +38,68 @@ astComponents (Identifier name) = get >>= \case
     Nothing     -> unrecognized name
 astComponents (Literal _) = return 1
 
-showName :: String -> ShaderM String
-showName name = get >>= \case
+writeName :: String -> ShaderM ()
+writeName name = get >>= \case
     Just Vertex -> case name of
-        "position" -> return "gl_Position"
+        "position" -> tellCurrent "gl_Position"
         _          -> M.lookup name <$> asks envInputs >>= \case
-            Just _  -> return ("a_" ++ name)
+            Just _  -> tellCurrent ("a_" ++ name)
             Nothing -> unrecognized name
     Just Pixel  -> M.lookup name <$> asks envOutputs >>= \case
-        Just _  -> return ("o_" ++ name)
+        Just _  -> tellCurrent ("o_" ++ name)
         Nothing -> unrecognized name
     Nothing     -> unrecognized name
 
-showAST :: AST -> ShaderM String
-showAST (Assignment name ast) = do
-    rhs <- showAST ast
-    lhs <- showAST (Identifier name)
+writeAST :: AST -> ShaderM ()
+writeAST (Assignment name ast) = do
+    tellCurrent "("
+    writeAST (Identifier name)
+    tellCurrent "="
+    writeAST ast
+    tellCurrent ")"
     (==) <$> astComponents (Identifier name) <*> astComponents ast >>= \case
-        False -> fail "number of components on lhs does not match number of components on rhs"
-        True  -> return ('(' : lhs ++ '=' : rhs ++ ")")
-showAST ast@(Swizzle asts) = do
-    inner <- intercalate "," <$> mapM showAST asts
+        False -> lift (Left "number of components on lhs does not match number of components on rhs")
+        True  -> return ()
+writeAST ast@(Swizzle asts) = do
     components <- astComponents ast
-    return ("(vec" ++ show components ++ '(' : inner ++ "))")
-showAST (Identifier name) = showName name
-showAST (Literal literal) = return (show literal)
+    tellCurrent ("(vec" ++ show components ++ "(")
+    sequence (tellCurrent "," `intersperse` map writeAST asts)
+    tellCurrent "))"
+writeAST (Identifier name) = writeName name
+writeAST (Literal literal) = tellCurrent (show literal)
 
-showFunction :: String -> Maybe String -> ShaderM String
-showFunction name mActualName = M.lookup name <$> asks envFunctions >>= \case
+writeFunction :: String -> Maybe String -> ShaderM ()
+writeFunction name mActualName = M.lookup name <$> asks envFunctions >>= \case
     Nothing -> unrecognized name
     Just asts -> do
-        statements <- mapM showAST asts
-        return ("void " ++ fromMaybe name mActualName ++ "(){" ++ concatMap (++ ";") statements ++ "}")
+        tellCurrent ("void " ++ fromMaybe name mActualName ++ "(){")
+        sequence (tellCurrent ";" `intersperse` map writeAST asts)
+        tellCurrent ";}"
 
-showIns :: ShaderM [String]
-showIns = M.toList <$> asks envInputs >>= f 0
-  where f _ [] = return []
+writeIns :: ShaderM ()
+writeIns = M.toList <$> asks envInputs >>= f 0
+  where f _ [] = return ()
         f n ((x,c):xs) = do
-            rest <- f (succ n) xs
-            return $ ("layout(location=" ++ show n ++ ")in vec" ++ show c ++ " a_" ++ x ++ ";") : rest
+            tell ("layout(location=" ++ show n ++ ")in vec" ++ show c ++ " a_" ++ x ++ ";", "")
+            f (succ n) xs
 
-showOuts :: ShaderM [String]
-showOuts = M.toList <$> asks envOutputs >>= f 0
-  where f _ [] = return []
+writeOuts :: ShaderM ()
+writeOuts = M.toList <$> asks envOutputs >>= f 0
+  where f _ [] = return ()
         f n ((x,c):xs) = do
-            rest <- f (succ n) xs
-            return $ ("out vec" ++ show c ++ " o_" ++ x ++ ";") : rest
+            tell ("", "out vec" ++ show c ++ " o_" ++ x ++ ";")
+            f (succ n) xs
 
-showShaders :: ShaderM (String, String)
-showShaders = do
+writeShaders :: ShaderM ()
+writeShaders = do
     put (Just Vertex)
-    vertex <- showFunction "vertex" (Just "main")
-    ins <- concat <$> showIns
+    tellCurrent (version ++ vExt ++ precision)
+    writeIns
+    writeFunction "vertex" (Just "main")
     put (Just Pixel)
-    pixel <- showFunction "pixel" (Just "main")
-    outs <- concat <$> showOuts
-    return ( version ++ vExt ++ precision ++ ins ++ vertex
-           , version         ++ precision ++ outs ++ pixel
-           )
+    tellCurrent (version ++ precision)
+    writeOuts
+    writeFunction "pixel" (Just "main")
   where version = "#version 150\n"
         vExt = "#extension GL_ARB_explicit_attrib_location: enable\n"
         precision = "precision highp float;"
