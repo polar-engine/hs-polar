@@ -14,7 +14,7 @@ data ShaderEnv = ShaderEnv
     , envInputs         :: M.Map String Int
     , envOutputs        :: M.Map String Int
     }
-type ShaderState = Maybe ShaderType
+type ShaderState = ShaderType
 type ShaderOutput = (String, String)
 type ShaderM = RWST ShaderEnv ShaderOutput ShaderState (Either String)
 
@@ -23,32 +23,29 @@ unrecognized name = lift $ Left ("unrecognized name (" ++ name ++ ")")
 
 tellCurrent :: String -> ShaderM ()
 tellCurrent msg = get >>= \case
-    Just Vertex -> tell (msg, "")
-    Just Pixel  -> tell ("", msg)
-    Nothing     -> lift (Left "no current shader")
+    Vertex -> tell (msg, "")
+    Pixel  -> tell ("", msg)
 
 astComponents :: AST -> ShaderM Int
 astComponents (Assignment name _) = astComponents (Identifier name)
 astComponents (Swizzle asts) = foldr (+) 0 <$> mapM astComponents asts
 astComponents (Identifier name) = get >>= \case
-    Just Vertex -> case name of
+    Vertex -> case name of
         "position" -> return 4
         _          -> M.lookup name <$> asks envInputs >>= maybe (unrecognized name) return
-    Just Pixel  -> M.lookup name <$> asks envOutputs >>= maybe (unrecognized name) return
-    Nothing     -> unrecognized name
+    Pixel  -> M.lookup name <$> asks envOutputs >>= maybe (unrecognized name) return
 astComponents (Literal _) = return 1
 
 writeName :: String -> ShaderM ()
 writeName name = get >>= \case
-    Just Vertex -> case name of
+    Vertex -> case name of
         "position" -> tellCurrent "gl_Position"
         _          -> M.lookup name <$> asks envInputs >>= \case
             Just _  -> tellCurrent ("a_" ++ name)
             Nothing -> unrecognized name
-    Just Pixel  -> M.lookup name <$> asks envOutputs >>= \case
+    Pixel  -> M.lookup name <$> asks envOutputs >>= \case
         Just _  -> tellCurrent ("o_" ++ name)
         Nothing -> unrecognized name
-    Nothing     -> unrecognized name
 
 writeAST :: AST -> ShaderM ()
 writeAST (Assignment name ast) = do
@@ -92,11 +89,11 @@ writeOuts = M.toList <$> asks envOutputs >>= f 0
 
 writeShaders :: ShaderM ()
 writeShaders = do
-    put (Just Vertex)
+    put Vertex
     tellCurrent (version ++ vExt ++ precision)
     writeIns
     writeFunction "vertex" (Just "main")
-    put (Just Pixel)
+    put Pixel
     tellCurrent (version ++ precision)
     writeOuts
     writeFunction "pixel" (Just "main")

@@ -12,7 +12,7 @@ data ProcessorEnv = ProcessorEnv
     , envInputs    :: M.Map String Int
     , envOutputs   :: M.Map String Int
     }
-type ProcessorState = Maybe ShaderType
+type ProcessorState = ShaderType
 type ProcessorOutput = ([(String, Int)], [(String, Int)])
 type ProcessorM = RWST ProcessorEnv ProcessorOutput ProcessorState (Either String)
 
@@ -21,22 +21,21 @@ processAST (Assignment name ast) = mapM_ processAST [Identifier name, ast]
 processAST (Swizzle asts) = mapM_ processAST asts
 processAST (Literal _) = return ()
 processAST (Identifier name) = get >>= \case
-    Just Vertex -> case name of
+    Vertex -> case name of
         "position" -> return ()
         _          -> M.lookup name <$> asks envInputs >>= \case
             Just x  -> tell ([(name, x)], [])
             Nothing -> return ()
-    Just Pixel  -> M.lookup name <$> asks envOutputs >>= \case
+    Pixel  -> M.lookup name <$> asks envOutputs >>= \case
         Just x  -> tell ([], [(name, x)])
         Nothing -> return ()
-    Nothing     -> return ()
 
 process :: ProcessorM ()
 process = do
     fns <- asks envFunctions
     case M.lookup "vertex" fns of
         Nothing -> lift (Left "no vertex function")
-        Just fn -> put (Just Vertex) >> mapM_ processAST fn
+        Just fn -> put Vertex >> mapM_ processAST fn
     case M.lookup "pixel" fns of
         Nothing -> lift (Left "no pixel function")
-        Just fn -> put (Just Pixel) >> mapM_ processAST fn
+        Just fn -> put Pixel >> mapM_ processAST fn

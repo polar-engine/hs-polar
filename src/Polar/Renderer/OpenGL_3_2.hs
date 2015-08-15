@@ -91,12 +91,12 @@ initShaderProgram = f <$> readFile "main.shader" >>= \case
                 { Processor.envFunctions = fns
                 , Processor.envInputs    = M.fromList [("vertex", 2)]
                 , Processor.envOutputs   = M.fromList [("color", 4)]
-                } Nothing
+                } undefined
             (\(_, _, w) -> w) <$> runRWST writeShaders ShaderEnv
                 { envFunctions = fns
                 , envInputs    = M.fromList (nub ins)
                 , envOutputs   = M.fromList (nub outs)
-                } Nothing
+                } undefined
 
 startup :: Listener
 startup _ = do
