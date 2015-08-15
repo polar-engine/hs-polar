@@ -29,12 +29,12 @@ tellCurrent msg = get >>= \case
 astComponents :: AST -> ShaderM Int
 astComponents (Assignment name _) = astComponents (Identifier name)
 astComponents (Swizzle asts) = foldr (+) 0 <$> mapM astComponents asts
+astComponents (Literal _) = return 1
 astComponents (Identifier name) = get >>= \case
     Vertex -> case name of
         "position" -> return 4
         _          -> M.lookup name <$> asks envInputs >>= maybe (unrecognized name) return
     Pixel  -> M.lookup name <$> asks envOutputs >>= maybe (unrecognized name) return
-astComponents (Literal _) = return 1
 
 writeName :: String -> ShaderM ()
 writeName name = get >>= \case

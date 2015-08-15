@@ -1,7 +1,5 @@
 module Polar.Asset.Shader.Types where
 
-import qualified Data.Map as M
-
 data Token = EqualsT
            | NewLineT
            | BraceOpenT
@@ -13,8 +11,8 @@ data Token = EqualsT
 
 data AST = Assignment String AST
          | Swizzle [AST]
-         | Identifier String
          | Literal Double
+         | Identifier String
            deriving Show
 
 data ShaderType = Vertex | Pixel
