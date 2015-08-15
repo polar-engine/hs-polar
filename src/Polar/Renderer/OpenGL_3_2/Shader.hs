@@ -6,7 +6,7 @@ import Data.Maybe (fromMaybe)
 import Data.List (nub, intercalate)
 import qualified Data.Map as M
 import Control.Applicative ((<$>), (<*>))
-import Control.Monad.State (gets, modify, lift)
+import Control.Monad.RWS (asks, gets, modify, lift)
 import Polar.Asset.Shader.Types
 
 unrecognized :: String -> ShaderM a
@@ -18,8 +18,8 @@ astComponents (Swizzle asts) = foldr (+) 0 <$> mapM astComponents asts
 astComponents (Identifier name) = gets currentType >>= \case
     Just Vertex -> case name of
         "position" -> return 4
-        _          -> M.lookup name <$> gets inputs >>= maybe (unrecognized name) return
-    Just Pixel  -> M.lookup name <$> gets outputs >>= maybe (unrecognized name) return
+        _          -> M.lookup name <$> asks inputs >>= maybe (unrecognized name) return
+    Just Pixel  -> M.lookup name <$> asks outputs >>= maybe (unrecognized name) return
     Nothing     -> unrecognized name
 astComponents (Literal _) = return 1
 
@@ -27,12 +27,12 @@ showName :: String -> ShaderM String
 showName name = gets currentType >>= \case
     Just Vertex -> case name of
         "position" -> return "gl_Position"
-        _          -> M.lookup name <$> gets inputs >>= \case
+        _          -> M.lookup name <$> asks inputs >>= \case
             Just _  -> do
                 modify (\env -> env { visitedInputs = name : visitedInputs env })
                 return ("a_" ++ name)
             Nothing -> unrecognized name
-    Just Pixel  -> M.lookup name <$> gets outputs >>= \case
+    Just Pixel  -> M.lookup name <$> asks outputs >>= \case
         Just _  -> do
             modify (\env -> env { visitedOutputs = name : visitedOutputs env })
             return ("o_" ++ name)
@@ -57,7 +57,7 @@ showStatement :: AST -> ShaderM String
 showStatement ast = (++ ";") <$> showAST ast
 
 showFunction :: String -> Maybe String -> ShaderM String
-showFunction name mActualName = M.lookup name <$> gets functions >>= \case
+showFunction name mActualName = M.lookup name <$> asks functions >>= \case
     Nothing -> unrecognized name
     Just asts -> do
         statements <- mapM showStatement asts

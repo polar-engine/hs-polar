@@ -1,7 +1,7 @@
 module Polar.Asset.Shader.Types where
 
 import qualified Data.Map as M
-import Control.Monad.State (StateT)
+import Control.Monad.RWS (RWST)
 
 data Token = EqualsT
            | NewLineT
@@ -22,21 +22,21 @@ data ShaderType = Vertex | Pixel
 
 data ShaderEnv = ShaderEnv
     { functions      :: M.Map String [AST]
-    , currentType    :: Maybe ShaderType
     , inputs         :: M.Map String Int
     , outputs        :: M.Map String Int
+    }
+
+data ShaderState = ShaderState
+    { currentType    :: Maybe ShaderType
     , visitedInputs  :: [String]
     , visitedOutputs :: [String]
     }
 
-defaultShaderEnv :: ShaderEnv
-defaultShaderEnv = ShaderEnv
-    { functions      = M.empty
-    , currentType    = Nothing
-    , inputs         = M.empty
-    , outputs        = M.empty
+defaultShaderState :: ShaderState
+defaultShaderState = ShaderState
+    { currentType    = Nothing
     , visitedInputs  = []
     , visitedOutputs = []
     }
 
-type ShaderM = StateT ShaderEnv (Either String)
+type ShaderM = RWST ShaderEnv () ShaderState (Either String)
