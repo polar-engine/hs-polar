@@ -76,21 +76,20 @@ setupProgram shaders = do
     return program
 
 initShaderProgram :: IO ()
-initShaderProgram = Shader.tokenize <$> readFile "main.shader" >>= \case
-    Left err -> putStrLn ("[ERROR] failed to tokenize shader (" ++ err ++ ")")
-    Right ts -> case Shader.parse ts of
-        Left err  -> putStrLn ("[ERROR] failed to parse shader (" ++ err ++")")
-        Right fns -> case runRWST showShaders ShaderEnv
-                              { functions = fns
-                              , inputs    = M.fromList [("vertex", 2)]
-                              , outputs   = M.fromList [("color", 4)]
-                              } defaultShaderState of
-            Left err -> putStrLn ("[ERROR] failed to process shader (" ++ err ++ ")")
-            Right ((vertex, pixel), _, ()) -> do
-                vsh <- setupShader vertex GL.VertexShader
-                fsh <- setupShader pixel GL.FragmentShader
-                program <- setupProgram [vsh, fsh]
-                gl (GL.currentProgram $= Just program)
+initShaderProgram = process <$> readFile "main.shader" >>= \case
+    Left err              -> putStrLn err
+    Right (vertex, pixel) -> do
+        vsh <- setupShader vertex GL.VertexShader
+        fsh <- setupShader pixel GL.FragmentShader
+        program <- setupProgram [vsh, fsh]
+        gl (GL.currentProgram $= Just program)
+  where process contents = do
+            fns <- Shader.tokenize contents >>= Shader.parse
+            (\(s, _, _) -> s) <$> runRWST showShaders ShaderEnv
+                { functions = fns
+                , inputs    = M.fromList [("vertex", 2)]
+                , outputs   = M.fromList [("color", 4)]
+                } defaultShaderState
 
 startup :: Listener
 startup _ = do
