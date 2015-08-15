@@ -2,6 +2,7 @@
 
 module Polar.Renderer.OpenGL_3_2 where
 
+import Data.List (nub)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as M
 import Control.Applicative ((<$>))
@@ -20,6 +21,7 @@ import Polar.Control
 import Polar.Listener
 import qualified Polar.Asset.Shader.Tokenizer as Shader
 import qualified Polar.Asset.Shader.Parser as Shader
+import qualified Polar.Asset.Shader.Processor as Shader
 import Polar.Asset.Shader.Types as Shader
 import Polar.Renderer.OpenGL_3_2.Shader
 
@@ -76,19 +78,24 @@ setupProgram shaders = do
     return program
 
 initShaderProgram :: IO ()
-initShaderProgram = process <$> readFile "main.shader" >>= \case
+initShaderProgram = f <$> readFile "main.shader" >>= \case
     Left err              -> putStrLn err
     Right (vertex, pixel) -> do
         vsh <- setupShader vertex GL.VertexShader
         fsh <- setupShader pixel GL.FragmentShader
         program <- setupProgram [vsh, fsh]
         gl (GL.currentProgram $= Just program)
-  where process contents = do
+  where f contents = do
             fns <- Shader.tokenize contents >>= Shader.parse
+            (_, _, (ins, outs)) <- runRWST Shader.process Shader.ProcessorEnv
+                { Shader.envFunctions = fns
+                , Shader.envInputs    = M.fromList [("vertex", 2)]
+                , Shader.envOutputs   = M.fromList [("color", 4)]
+                } Nothing
             (\(s, _, _) -> s) <$> runRWST showShaders ShaderEnv
                 { functions = fns
-                , inputs    = M.fromList [("vertex", 2)]
-                , outputs   = M.fromList [("color", 4)]
+                , inputs    = M.fromList (nub ins)
+                , outputs   = M.fromList (nub outs)
                 } defaultShaderState
 
 startup :: Listener
