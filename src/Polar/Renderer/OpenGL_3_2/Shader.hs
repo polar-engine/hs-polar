@@ -35,17 +35,6 @@ astComponents NamePosition = return 4
 astComponents (NameInput name) = M.lookup name <$> asks envInputs >>= maybe (unrecognized name) return
 astComponents (NameOutput name) = M.lookup name <$> asks envOutputs >>= maybe (unrecognized name) return
 
-writeName :: String -> ShaderM ()
-writeName name = get >>= \case
-    Vertex -> case name of
-        "position" -> tellCurrent "gl_Position"
-        _          -> M.lookup name <$> asks envInputs >>= \case
-            Just _  -> tellCurrent ("a_" ++ name)
-            Nothing -> unrecognized name
-    Pixel  -> M.lookup name <$> asks envOutputs >>= \case
-        Just _  -> tellCurrent ("o_" ++ name)
-        Nothing -> unrecognized name
-
 writeAST :: AST -> ShaderM ()
 writeAST (Assignment lhs rhs) = do
     tellCurrent "("
