@@ -27,14 +27,13 @@ tellCurrent msg = get >>= \case
     Pixel  -> tell ("", msg)
 
 astComponents :: AST -> ShaderM Int
-astComponents (Assignment name _) = astComponents (Identifier name)
+astComponents (Assignment lhs _) = astComponents lhs
 astComponents (Swizzle asts) = foldr (+) 0 <$> mapM astComponents asts
 astComponents (Literal _) = return 1
-astComponents (Identifier name) = get >>= \case
-    Vertex -> case name of
-        "position" -> return 4
-        _          -> M.lookup name <$> asks envInputs >>= maybe (unrecognized name) return
-    Pixel  -> M.lookup name <$> asks envOutputs >>= maybe (unrecognized name) return
+astComponents (Identifier name) = lift $ Left ("unresolved identifier (" ++ name ++ ")")
+astComponents NamePosition = return 4
+astComponents (NameInput name) = M.lookup name <$> asks envInputs >>= maybe (unrecognized name) return
+astComponents (NameOutput name) = M.lookup name <$> asks envOutputs >>= maybe (unrecognized name) return
 
 writeName :: String -> ShaderM ()
 writeName name = get >>= \case
@@ -48,13 +47,13 @@ writeName name = get >>= \case
         Nothing -> unrecognized name
 
 writeAST :: AST -> ShaderM ()
-writeAST (Assignment name ast) = do
+writeAST (Assignment lhs rhs) = do
     tellCurrent "("
-    writeAST (Identifier name)
+    writeAST lhs
     tellCurrent "="
-    writeAST ast
+    writeAST rhs
     tellCurrent ")"
-    (==) <$> astComponents (Identifier name) <*> astComponents ast >>= \case
+    (==) <$> astComponents lhs <*> astComponents rhs >>= \case
         False -> lift (Left "number of components on lhs does not match number of components on rhs")
         True  -> return ()
 writeAST ast@(Swizzle asts) = do
@@ -62,8 +61,11 @@ writeAST ast@(Swizzle asts) = do
     tellCurrent ("(vec" ++ show components ++ "(")
     sequence (tellCurrent "," `intersperse` map writeAST asts)
     tellCurrent "))"
-writeAST (Identifier name) = writeName name
 writeAST (Literal literal) = tellCurrent (show literal)
+writeAST (Identifier name) = lift $ Left ("unresolved identifier (" ++ name ++ ")")
+writeAST NamePosition = tellCurrent "gl_Position"
+writeAST (NameInput name) = tellCurrent ("a_" ++ name)
+writeAST (NameOutput name) = tellCurrent ("o_" ++ name)
 
 writeFunction :: String -> Maybe String -> ShaderM ()
 writeFunction name mActualName = M.lookup name <$> asks envFunctions >>= \case

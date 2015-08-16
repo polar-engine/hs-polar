@@ -87,13 +87,13 @@ initShaderProgram = f <$> readFile "main.shader" >>= \case
         gl (GL.currentProgram $= Just program)
   where f contents = do
             fns <- tokenize contents >>= parse
-            (_, _, (ins, outs)) <- runRWST process Processor.ProcessorEnv
+            (processedFns, _, (ins, outs)) <- runRWST process Processor.ProcessorEnv
                 { Processor.envFunctions = fns
                 , Processor.envInputs    = M.fromList [("vertex", 2)]
                 , Processor.envOutputs   = M.fromList [("color", 4)]
                 } undefined
             (\(_, _, w) -> w) <$> runRWST writeShaders ShaderEnv
-                { envFunctions = fns
+                { envFunctions = processedFns
                 , envInputs    = M.fromList (nub ins)
                 , envOutputs   = M.fromList (nub outs)
                 } undefined

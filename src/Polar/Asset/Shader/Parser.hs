@@ -10,7 +10,7 @@ parseAST :: [Token] -> Either String (AST, [Token])
 parseAST [] = Left "unexpected end of stream"
 parseAST (IdentifierT name : EqualsT : ts) = do
     (ast, rest) <- parseAST ts
-    return (Assignment name ast, rest)
+    return (Assignment (Identifier name) ast, rest)
 parseAST (IdentifierT x : ts) = case parseAST ts of
     Left _                     -> return (identifier, ts)
     Right (Swizzle asts, rest) -> return (Swizzle (identifier : asts), rest)
