@@ -55,30 +55,22 @@ writeFunction name mActualName = M.lookup name <$> asks envFunctions >>= \case
         sequence (tellCurrent ";" `intersperse` map writeAST asts)
         tellCurrent ";}"
 
-writeIns :: ShaderM ()
-writeIns = M.toList <$> asks envInputs >>= f 0
-  where f _ [] = return ()
-        f n ((x,c):xs) = do
-            tell ("layout(location=" ++ show n ++ ")in vec" ++ show c ++ " a_" ++ x ++ ";", "")
-            f (succ n) xs
-
-writeOuts :: ShaderM ()
-writeOuts = M.toList <$> asks envOutputs >>= f 0
-  where f _ [] = return ()
-        f n ((x,c):xs) = do
-            tell ("", "out vec" ++ show c ++ " o_" ++ x ++ ";")
-            f (succ n) xs
+writeLocatables :: String -> String -> Int -> [(String, Int)] -> ShaderM ()
+writeLocatables _ _ _ [] = return ()
+writeLocatables qualifier prefix n ((name, c):xs) = do
+    tellCurrent $ "layout(location=" ++ show n ++ ')' : qualifier ++ " vec" ++ show c ++ ' ' : prefix ++ name ++ ";"
+    writeLocatables qualifier prefix (succ n) xs
 
 writeShaders :: ShaderM ()
 writeShaders = do
     put Vertex
-    tellCurrent (version ++ vExt ++ precision)
-    writeIns
+    tellCurrent (version ++ ext ++ precision)
+    M.toList <$> asks envInputs >>= writeLocatables "in" "a_" 0
     writeFunction "vertex" (Just "main")
     put Pixel
-    tellCurrent (version ++ precision)
-    writeOuts
+    tellCurrent (version ++ ext ++ precision)
+    M.toList <$> asks envOutputs >>= writeLocatables "out" "o_" 0
     writeFunction "pixel" (Just "main")
   where version = "#version 150\n"
-        vExt = "#extension GL_ARB_explicit_attrib_location: enable\n"
+        ext = "#extension GL_ARB_explicit_attrib_location: enable\n"
         precision = "precision highp float;"
