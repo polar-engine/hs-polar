@@ -26,11 +26,11 @@ tellCurrent msg = get >>= \case
     Vertex -> tell (msg, "")
     Pixel  -> tell ("", msg)
 
-astComponents :: AST -> ShaderM Int
+astComponents :: AST -> Either String Int
 astComponents (Assignment lhs _) = astComponents lhs
 astComponents (Swizzle asts) = foldr (+) 0 <$> mapM astComponents asts
 astComponents (Literal _) = return 1
-astComponents (Identifier name) = lift $ Left ("unresolved identifier (" ++ name ++ ")")
+astComponents (Identifier name) = Left ("unresolved identifier (" ++ name ++ ")")
 astComponents NamePosition = return 4
 astComponents (NameInput _ x) = return x
 astComponents (NameOutput _ x) = return x
@@ -42,11 +42,11 @@ writeAST (Assignment lhs rhs) = do
     tellCurrent "="
     writeAST rhs
     tellCurrent ")"
-    (==) <$> astComponents lhs <*> astComponents rhs >>= \case
-        False -> lift (Left "number of components on lhs does not match number of components on rhs")
+    lift $ (==) <$> astComponents lhs <*> astComponents rhs >>= \case
+        False -> Left "number of components on lhs does not match number of components on rhs"
         True  -> return ()
 writeAST ast@(Swizzle asts) = do
-    components <- astComponents ast
+    components <- lift (astComponents ast)
     tellCurrent ("(vec" ++ show components ++ "(")
     sequence (tellCurrent "," `intersperse` map writeAST asts)
     tellCurrent "))"
