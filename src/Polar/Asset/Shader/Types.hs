@@ -1,5 +1,7 @@
 module Polar.Asset.Shader.Types where
 
+import Control.Applicative ((<$>))
+
 data Token = EqualsT
            | NewLineT
            | BraceOpenT
@@ -19,3 +21,12 @@ data AST = Assignment AST AST
            deriving Show
 
 data ShaderType = Vertex | Pixel
+
+astComponents :: AST -> Either String Int
+astComponents (Assignment lhs _) = astComponents lhs
+astComponents (Swizzle asts) = foldr (+) 0 <$> mapM astComponents asts
+astComponents (Literal _) = return 1
+astComponents (Identifier name) = Left ("unresolved identifier (" ++ name ++ ")")
+astComponents NamePosition = return 4
+astComponents (NameInput _ x) = return x
+astComponents (NameOutput _ x) = return x

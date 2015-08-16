@@ -26,15 +26,6 @@ tellCurrent msg = get >>= \case
     Vertex -> tell (msg, "")
     Pixel  -> tell ("", msg)
 
-astComponents :: AST -> Either String Int
-astComponents (Assignment lhs _) = astComponents lhs
-astComponents (Swizzle asts) = foldr (+) 0 <$> mapM astComponents asts
-astComponents (Literal _) = return 1
-astComponents (Identifier name) = Left ("unresolved identifier (" ++ name ++ ")")
-astComponents NamePosition = return 4
-astComponents (NameInput _ x) = return x
-astComponents (NameOutput _ x) = return x
-
 writeAST :: AST -> ShaderM ()
 writeAST (Assignment lhs rhs) = do
     tellCurrent "("
