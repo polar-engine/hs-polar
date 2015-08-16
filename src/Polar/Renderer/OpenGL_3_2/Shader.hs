@@ -32,8 +32,8 @@ astComponents (Swizzle asts) = foldr (+) 0 <$> mapM astComponents asts
 astComponents (Literal _) = return 1
 astComponents (Identifier name) = lift $ Left ("unresolved identifier (" ++ name ++ ")")
 astComponents NamePosition = return 4
-astComponents (NameInput name) = M.lookup name <$> asks envInputs >>= maybe (unrecognized name) return
-astComponents (NameOutput name) = M.lookup name <$> asks envOutputs >>= maybe (unrecognized name) return
+astComponents (NameInput _ x) = return x
+astComponents (NameOutput _ x) = return x
 
 writeAST :: AST -> ShaderM ()
 writeAST (Assignment lhs rhs) = do
@@ -53,8 +53,8 @@ writeAST ast@(Swizzle asts) = do
 writeAST (Literal literal) = tellCurrent (show literal)
 writeAST (Identifier name) = lift $ Left ("unresolved identifier (" ++ name ++ ")")
 writeAST NamePosition = tellCurrent "gl_Position"
-writeAST (NameInput name) = tellCurrent ("a_" ++ name)
-writeAST (NameOutput name) = tellCurrent ("o_" ++ name)
+writeAST (NameInput name _) = tellCurrent ("a_" ++ name)
+writeAST (NameOutput name _) = tellCurrent ("o_" ++ name)
 
 writeFunction :: String -> Maybe String -> ShaderM ()
 writeFunction name mActualName = M.lookup name <$> asks envFunctions >>= \case

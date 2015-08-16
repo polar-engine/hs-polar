@@ -23,10 +23,10 @@ processAST ast@(Identifier name) = get >>= \case
     Vertex -> case name of
         "position" -> return NamePosition
         _          -> M.lookup name <$> asks envInputs >>= \case
-            Just x  -> tell ([(name, x)], []) >> return (NameInput name)
+            Just x  -> tell ([(name, x)], []) >> return (NameInput name x)
             Nothing -> return ast
     Pixel  -> M.lookup name <$> asks envOutputs >>= \case
-        Just x  -> tell ([], [(name, x)]) >> return (NameOutput name)
+        Just x  -> tell ([], [(name, x)]) >> return (NameOutput name x)
         Nothing -> return ast
 processAST ast = return ast
 

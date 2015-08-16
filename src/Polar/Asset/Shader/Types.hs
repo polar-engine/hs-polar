@@ -14,8 +14,8 @@ data AST = Assignment AST AST
          | Literal Double
          | Identifier String
          | NamePosition
-         | NameInput String
-         | NameOutput String
+         | NameInput String Int
+         | NameOutput String Int
            deriving Show
 
 data ShaderType = Vertex | Pixel
