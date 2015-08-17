@@ -16,3 +16,7 @@ clean:
 	rm -fv "$(EXECUTABLE)"
 	find src -name '*.o' -print0 | xargs -0 rm -fv
 	find src -name '*.hi' -print0 | xargs -0 rm -fv
+
+.PHONY: test
+test:
+	runhaskell -isrc src/Test
