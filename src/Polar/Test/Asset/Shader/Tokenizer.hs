@@ -18,4 +18,6 @@ tests = TestList [ TestCase $ assertEqual "when input is empty" (Right []) (Toke
                  , TestCase $ assertEqual "when input is \"a\""   (Right [Types.IdentifierT "a"])   (Tokenizer.tokenize "a")
                  , TestCase $ assertEqual "when input is \"as\""  (Right [Types.IdentifierT "as"])  (Tokenizer.tokenize "as")
                  , TestCase $ assertEqual "when input is \"asd\"" (Right [Types.IdentifierT "asd"]) (Tokenizer.tokenize "asd")
+                 , TestCase $ assertEqual "when input is \"1\""   (Right [Types.LiteralT 1.0]) (Tokenizer.tokenize "1")
+                 , TestCase $ assertEqual "when input is \"1.0\"" (Right [Types.LiteralT 1.0]) (Tokenizer.tokenize "1.0")
                  ]
