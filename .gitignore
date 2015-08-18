@@ -2,5 +2,6 @@
 .*.swo
 *.o
 *.hi
+dist
 polar4
 polar4.exe
