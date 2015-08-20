@@ -3,7 +3,7 @@
 *.o
 *.hi
 .cabal-sandbox
-.cabal.sandbox.config
+cabal.sandbox.config
 dist
 polar4
 polar4.exe
