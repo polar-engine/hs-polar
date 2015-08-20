@@ -32,7 +32,7 @@ tokenize ('\t':xs) = tokenize xs
 tokenize ('\v':xs) = tokenize xs
 tokenize ('\f':xs) = tokenize xs
 tokenize s@(x:_)
-    | isAlphaNum x = case reads literalWord :: [(Double, String)] of
+    | isLiteralChar x || isAlphaNum x = case reads literalWord :: [(Double, String)] of
         [(literal, "")] -> (LiteralT literal :) <$> tokenize literalXs
         _               -> (IdentifierT word :) <$> tokenize xs
     | otherwise = Left ("unrecognized token `" ++ x : "`")
