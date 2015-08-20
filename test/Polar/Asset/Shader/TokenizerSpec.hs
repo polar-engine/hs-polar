@@ -50,6 +50,30 @@ spec = describe "Tokenizer" $ do
     it "returns a LiteralT 1.0 when given \"1\"" $
         tokenize "1"
         `shouldBe` Right [LiteralT 1.0]
+    it "returns a LiteralT 12.0 when given \"12\"" $
+        tokenize "12"
+        `shouldBe` Right [LiteralT 12.0]
+    it "returns a LiteralT 123.0 when given \"123\"" $
+        tokenize "123"
+        `shouldBe` Right [LiteralT 123.0]
     it "returns a LiteralT 1.0 when given \"1.0\"" $
         tokenize "1.0"
         `shouldBe` Right [LiteralT 1.0]
+    it "returns a LiteralT 12.0 when given \"12.0\"" $
+        tokenize "12.0"
+        `shouldBe` Right [LiteralT 12.0]
+    it "returns a LiteralT 1.01 when given \"1.01\"" $
+        tokenize "1.01"
+        `shouldBe` Right [LiteralT 1.01]
+    it "returns a LiteralT 12.01 when given \"12.01\"" $
+        tokenize "12.01"
+        `shouldBe` Right [LiteralT 12.01]
+    it "returns a LiteralT -1.0 when given \"-1\"" $
+        tokenize "-1"
+        `shouldBe` Right [LiteralT (-1.0)]
+    it "returns a LiteralT -1.0 when given \"-1.0\"" $
+        tokenize "-1.0"
+        `shouldBe` Right [LiteralT (-1.0)]
+    it "returns a LiteralT -12.01 when given \"-12.01\"" $
+        tokenize "-12.01"
+        `shouldBe` Right [LiteralT (-12.01)]
