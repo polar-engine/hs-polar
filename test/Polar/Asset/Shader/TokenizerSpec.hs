@@ -4,6 +4,10 @@ import Test.Hspec
 import Polar.Asset.Shader.Tokenizer
 import Polar.Asset.Shader.Types
 
+isLeft :: Either a b -> Bool
+isLeft (Left _) = True
+isLeft (Right _) = False
+
 spec = describe "Tokenizer" $ do
     it "returns an empty list when given an empty string" $
         tokenize ""
@@ -77,3 +81,27 @@ spec = describe "Tokenizer" $ do
     it "returns a LiteralT -12.01 when given \"-12.01\"" $
         tokenize "-12.01"
         `shouldBe` Right [LiteralT (-12.01)]
+    it "returns [EqualsT, BraceOpenT] when given \"={\"" $
+        tokenize "={"
+        `shouldBe` Right [EqualsT, BraceOpenT]
+    it "returns [BraceOpenT, BraceCloseT] when given \"{ }\"" $
+        tokenize "{ }"
+        `shouldBe` Right [BraceOpenT, BraceCloseT]
+    it "returns [BraceCloseT, NewLineT, NewLineT, StatementEndT, EqualsT] when given \"}  \\n\\r\\v\\t\\f;   =\"" $
+        tokenize "}  \n\r\v\t\f;   ="
+        `shouldBe` Right [BraceCloseT, NewLineT, NewLineT, StatementEndT, EqualsT]
+    it "returns [IdentifierT \"asdf\", IdentifierT \"ghjkl\"] when given \"asdf ghjkl\"" $
+        tokenize "asdf ghjkl"
+        `shouldBe` Right [IdentifierT "asdf", IdentifierT "ghjkl"]
+    it "returns [IdentifierT \"asdf\", LiteralT 12.01] when given \"asdf 12.01\"" $
+        tokenize "asdf 12.01"
+        `shouldBe` Right [IdentifierT "asdf", LiteralT 12.01]
+    it "returns [LiteralT 12.01, IdentifierT \"asdf\"] when given \"12.01 asdf\"" $
+        tokenize "12.01 asdf"
+        `shouldBe` Right [LiteralT 12.01, IdentifierT "asdf"]
+    it "returns an error when given a backtick" $
+        tokenize "`"
+        `shouldSatisfy` isLeft
+    it "returns an error when given a backtick anywhere" $
+        tokenize "asdf = 12.01`"
+        `shouldSatisfy` isLeft
