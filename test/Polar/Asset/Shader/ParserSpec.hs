@@ -31,4 +31,4 @@ spec = describe "Parser" $ do
     it "returns a singleton function with a single AST when given \
              \[IdentifierT \"a\", BraceOpenT, LiteralT 1.0, BraceCloseT, IdentifierT \"a\", BraceOpenT, LiteralT 2.0, BraceCloseT]" $
         parse [IdentifierT  "a" , BraceOpenT, LiteralT 1.0, BraceCloseT, IdentifierT  "a" , BraceOpenT, LiteralT 2.0, BraceCloseT]
-        `shouldBe` Right (M.singleton "a" [Literal 1.0])
+        `shouldBe` Right (M.singleton "a" [Literal 2.0])
