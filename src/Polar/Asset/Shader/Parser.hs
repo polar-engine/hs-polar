@@ -45,4 +45,4 @@ parse [] = return M.empty
 parse (NewLineT : ts) = parse ts
 parse ts = do
     (name, asts, rest) <- parseFunction ts
-    M.insert name asts <$> parse rest
+    M.insertWith (flip const) name asts <$> parse rest
