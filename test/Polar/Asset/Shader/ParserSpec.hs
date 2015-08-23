@@ -109,3 +109,21 @@ spec = describe "Parser" $ do
     it "returns an error when given a leading IdentifierT and BraceOpenT without a trailing BraceCloseT" $
         parse [IdentifierT "a", BraceOpenT, LiteralT 1.0]
         `shouldSatisfy` isLeft
+    it "returns an error when given a function with a leading EqualsT" $
+        parse [IdentifierT "a", BraceOpenT, EqualsT, BraceCloseT]
+        `shouldSatisfy` isLeft
+    it "returns an error when given a function with a leading BraceOpenT" $
+        parse [IdentifierT "a", BraceOpenT, BraceOpenT, BraceCloseT]
+        `shouldSatisfy` isLeft
+    it "returns an error when given a function that assigns to a literal" $
+        parse [IdentifierT "a", BraceOpenT, LiteralT 1.0, EqualsT, LiteralT 2.0, BraceCloseT]
+        `shouldSatisfy` isLeft
+    it "returns an error when given a function that assigns to a swizzle" $
+        parse [IdentifierT "a", BraceOpenT, IdentifierT "asdf", LiteralT 1.0, EqualsT, LiteralT 2.0, BraceCloseT]
+        `shouldSatisfy` isLeft
+    it "returns an error when given an incomplete assignment expression" $
+        parse [IdentifierT "a", BraceOpenT, IdentifierT "var", EqualsT, BraceCloseT]
+        `shouldSatisfy` isLeft
+    it "supports nested assignment expressions" $
+        parse [IdentifierT "a", BraceOpenT, IdentifierT "var", EqualsT, IdentifierT "name", EqualsT, LiteralT 2.0, BraceCloseT]
+        `shouldBe` Right (M.fromList [("a", [Assignment (Identifier "var") (Assignment (Identifier "name") (Literal 2.0))])])
