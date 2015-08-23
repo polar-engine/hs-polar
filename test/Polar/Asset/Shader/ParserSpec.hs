@@ -58,3 +58,38 @@ spec = describe "Parser" $ do
              \[IdentifierT \"a\", BraceOpenT, LiteralT 1.0, NewLineT, LiteralT 2.0, BraceCloseT]" $
         parse [IdentifierT  "a" , BraceOpenT, LiteralT 1.0, NewLineT, LiteralT 2.0, BraceCloseT]
         `shouldBe` Right (M.singleton "a" [Literal 1.0, Literal 2.0])
+    it "returns a singleton empty function when given \
+             \[NewLineT, IdentifierT \"a\", BraceOpenT, BraceCloseT]" $
+        parse [NewLineT, IdentifierT  "a" , BraceOpenT, BraceCloseT]
+        `shouldBe` Right (M.singleton "a" [])
+    it "returns a singleton empty function when given \
+             \[NewLineT, NewLineT, IdentifierT \"a\", BraceOpenT, BraceCloseT]" $
+        parse [NewLineT, NewLineT, IdentifierT  "a" , BraceOpenT, BraceCloseT]
+        `shouldBe` Right (M.singleton "a" [])
+    it "returns an error when given a leading EqualsT" $
+        parse [EqualsT]
+        `shouldSatisfy` isLeft
+    it "returns an error when given a leading BraceOpenT" $
+        parse [BraceOpenT]
+        `shouldSatisfy` isLeft
+    it "returns an error when given a leading BraceCloseT" $
+        parse [BraceCloseT]
+        `shouldSatisfy` isLeft
+    it "returns an error when given a leading StatementEndT" $
+        parse [StatementEndT]
+        `shouldSatisfy` isLeft
+    it "returns an error when given a leading LiteralT" $
+        parse [LiteralT 1.0]
+        `shouldSatisfy` isLeft
+    it "returns an error when given a leading IdentifierT without a following BraceOpenT" $
+        parse [IdentifierT "a"]
+        `shouldSatisfy` isLeft
+    it "returns an error when given a leading IdentifierT without a following BraceOpenT" $
+        parse [IdentifierT "a", EqualsT, LiteralT 1.0]
+        `shouldSatisfy` isLeft
+    it "returns an error when given a leading IdentifierT and BraceOpenT without a trailing BraceCloseT" $
+        parse [IdentifierT "a", BraceOpenT]
+        `shouldSatisfy` isLeft
+    it "returns an error when given a leading IdentifierT and BraceOpenT without a trailing BraceCloseT" $
+        parse [IdentifierT "a", BraceOpenT, LiteralT 1.0]
+        `shouldSatisfy` isLeft
