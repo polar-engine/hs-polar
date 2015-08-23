@@ -66,6 +66,22 @@ spec = describe "Parser" $ do
              \[NewLineT, NewLineT, IdentifierT \"a\", BraceOpenT, BraceCloseT]" $
         parse [NewLineT, NewLineT, IdentifierT  "a" , BraceOpenT, BraceCloseT]
         `shouldBe` Right (M.singleton "a" [])
+    it "returns a singleton empty function when given \
+             \[IdentifierT \"a\", NewLineT, BraceOpenT, BraceCloseT]" $
+        parse [IdentifierT  "a" , NewLineT, BraceOpenT, BraceCloseT]
+        `shouldBe` Right (M.singleton "a" [])
+    it "returns a singleton empty function when given \
+             \[IdentifierT \"a\", NewLineT, NewLineT, BraceOpenT, BraceCloseT]" $
+        parse [IdentifierT  "a" , NewLineT, NewLineT, BraceOpenT, BraceCloseT]
+        `shouldBe` Right (M.singleton "a" [])
+    it "returns a singleton empty function when given \
+             \[IdentifierT \"a\", BraceOpenT, NewLineT, BraceCloseT]" $
+        parse [IdentifierT  "a" , BraceOpenT, NewLineT, BraceCloseT]
+        `shouldBe` Right (M.singleton "a" [])
+    it "returns a singleton function when given \
+             \[IdentifierT \"a\", BraceOpenT, NewLineT, NewLineT, LiteralT 1.0, BraceCloseT]" $
+        parse [IdentifierT  "a" , BraceOpenT, NewLineT, NewLineT, LiteralT 1.0, BraceCloseT]
+        `shouldBe` Right (M.singleton "a" [Literal 1.0])
     it "returns an error when given a leading EqualsT" $
         parse [EqualsT]
         `shouldSatisfy` isLeft
