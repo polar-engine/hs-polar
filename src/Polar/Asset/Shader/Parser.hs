@@ -34,9 +34,11 @@ parseStatements ts = do
 
 parseFunction :: [Token] -> Either String (String, [AST], [Token])
 parseFunction [] = Left "unexpected end of stream"
-parseFunction (IdentifierT name : BraceOpenT : ts) = do
-    (asts, []) <- parseStatements contents
-    return (name, asts, tail rest)
+parseFunction (IdentifierT name : BraceOpenT : ts)
+    | null rest = Left ("unexpected end of stream")
+    | otherwise = do
+        (asts, []) <- parseStatements contents
+        return (name, asts, tail rest)
   where (contents, rest) = break (== BraceCloseT) ts
 parseFunction (t : _) = Left ("unexpected token (" ++ show t ++ ")")
 
