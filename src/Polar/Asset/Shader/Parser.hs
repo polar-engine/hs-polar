@@ -40,6 +40,7 @@ parseFunction (IdentifierT name : BraceOpenT : ts)
         (asts, []) <- parseStatements contents
         return (name, asts, tail rest)
   where (contents, rest) = break (== BraceCloseT) ts
+parseFunction (t : NewLineT : ts) = parseFunction (t : ts)
 parseFunction (t : _) = Left ("unexpected token (" ++ show t ++ ")")
 
 parse :: [Token] -> Either String (M.Map String [AST])
