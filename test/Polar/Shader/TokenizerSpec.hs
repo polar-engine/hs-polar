@@ -1,9 +1,9 @@
-module Polar.Asset.Shader.TokenizerSpec where
+module Polar.Shader.TokenizerSpec where
 
 import Data.Either (isLeft)
 import Test.Hspec
-import Polar.Asset.Shader.Types
-import Polar.Asset.Shader.Tokenizer
+import Polar.Shader.Types
+import Polar.Shader.Tokenizer
 
 spec = describe "Tokenizer" $ do
     it "returns an empty list when given an empty string" $

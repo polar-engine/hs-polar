@@ -1,11 +1,11 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Polar.Asset.Shader.Processor where
+module Polar.Shader.Processor where
 
 import qualified Data.Map as M
 import Control.Applicative ((<$>))
 import Control.Monad.RWS (RWST, asks, tell, get, put, lift)
-import Polar.Asset.Shader.Types (AST(..), ShaderType(..))
+import Polar.Shader.Types (AST(..), ShaderType(..))
 
 data ProcessorEnv = ProcessorEnv
     { envFunctions :: M.Map String [AST]

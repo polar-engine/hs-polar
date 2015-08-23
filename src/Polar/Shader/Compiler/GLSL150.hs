@@ -1,13 +1,13 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Polar.Renderer.OpenGL_3_2.Shader where
+module Polar.Shader.Compiler.GLSL150 where
 
 import Data.Maybe (fromMaybe)
 import Data.List (intersperse)
 import qualified Data.Map as M
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad.RWS (RWST, asks, tell, get, put, lift)
-import Polar.Asset.Shader.Types
+import Polar.Shader.Types
 
 data ShaderEnv = ShaderEnv
     { envFunctions      :: M.Map String [AST]

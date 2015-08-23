@@ -1,10 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Polar.Asset.Shader.Parser where
+module Polar.Shader.Parser where
 
 import qualified Data.Map as M
 import Control.Applicative ((<$>))
-import Polar.Asset.Shader.Types
+import Polar.Shader.Types
 
 parseAST :: [Token] -> Either String (AST, [Token])
 parseAST [] = Left "unexpected end of stream"

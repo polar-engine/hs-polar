@@ -1,4 +1,4 @@
-module Polar.Asset.Shader.Types where
+module Polar.Shader.Types where
 
 import Control.Applicative ((<$>))
 

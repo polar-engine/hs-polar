@@ -13,10 +13,10 @@ cabal-version:       >=1.9.2
 
 library
   exposed-modules:     Polar,
-                       Polar.Asset.Shader.Types,
-                       Polar.Asset.Shader.Tokenizer,
-                       Polar.Asset.Shader.Parser,
-                       Polar.Asset.Shader.Processor
+                       Polar.Shader.Types,
+                       Polar.Shader.Tokenizer,
+                       Polar.Shader.Parser,
+                       Polar.Shader.Processor
   build-depends:       base >=4.7, mtl >=2.2, containers >=0.5.5, OpenGL >=2.12, GLFW-b >=1.4.7, transformers >=0.4.2, bytestring >=0.10
   hs-source-dirs:      src
   ghc-options:         -W

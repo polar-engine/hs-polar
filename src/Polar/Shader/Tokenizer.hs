@@ -1,8 +1,8 @@
-module Polar.Asset.Shader.Tokenizer where
+module Polar.Shader.Tokenizer where
 
 import Data.Char (isAlphaNum)
 import Control.Applicative ((<$>))
-import Polar.Asset.Shader.Types
+import Polar.Shader.Types
 
 isLiteralChar :: Char -> Bool
 isLiteralChar '-' = True
