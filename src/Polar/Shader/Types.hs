@@ -20,7 +20,7 @@ data AST = Assignment AST AST
          | NameOutput String Int
            deriving (Eq, Show)
 
-data ShaderType = Vertex | Pixel
+data Type = Vertex | Pixel
 
 astComponents :: AST -> Either String Int
 astComponents (Assignment lhs _) = astComponents lhs

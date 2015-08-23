@@ -14,7 +14,7 @@ data ShaderEnv = ShaderEnv
     , envInputs         :: M.Map String Int
     , envOutputs        :: M.Map String Int
     }
-type ShaderState = ShaderType
+type ShaderState = Type
 type ShaderOutput = (String, String)
 type ShaderM = RWST ShaderEnv ShaderOutput ShaderState (Either String)
 

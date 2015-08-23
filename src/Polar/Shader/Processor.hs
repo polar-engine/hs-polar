@@ -5,14 +5,14 @@ module Polar.Shader.Processor where
 import qualified Data.Map as M
 import Control.Applicative ((<$>))
 import Control.Monad.RWS (RWST, asks, tell, get, put, lift)
-import Polar.Shader.Types (AST(..), ShaderType(..))
+import Polar.Shader.Types (AST(..), Type(..))
 
 data ProcessorEnv = ProcessorEnv
     { envFunctions :: M.Map String [AST]
     , envInputs    :: M.Map String Int
     , envOutputs   :: M.Map String Int
     }
-type ProcessorState = ShaderType
+type ProcessorState = Type
 type ProcessorOutput = ([(String, Int)], [(String, Int)])
 type ProcessorM = RWST ProcessorEnv ProcessorOutput ProcessorState (Either String)
 
