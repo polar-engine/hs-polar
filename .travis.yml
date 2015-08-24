@@ -4,6 +4,10 @@ addons:
     packages:
       - libxxf86vm-dev
       - libglfw-dev
+cache:
+  directories:
+    - $HOME/.ghc
+    - $HOME/.cabal
 language: haskell
 ghc:
   - "7.8"
