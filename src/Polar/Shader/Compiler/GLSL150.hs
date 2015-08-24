@@ -10,7 +10,7 @@ import Control.Monad.RWS (RWST, asks, tell, get, put, lift, runRWST)
 import Polar.Shader.Types
 
 data GLSL150 = GLSL150
-instance Compiler GLSL150 where generate env _ = (\(_, _, w) -> w) <$> runRWST writeShaders env undefined
+instance Compiler GLSL150 where generate env _ = (\(_, _, w) -> w) <$> runRWST writeShaders env Vertex
 
 type ShaderM = RWST CompilerEnv (String, String) Type (Either String)
 
