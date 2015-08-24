@@ -1,6 +1,9 @@
+sudo: false
+addons:
+  apt:
+    sources:
+      - libxxf86vm-dev
+      - libglfw-dev
 language: haskell
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y libxxf86vm-dev libglfw-dev
 ghc:
   - "7.8"
