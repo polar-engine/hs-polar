@@ -6,17 +6,13 @@ import Data.Maybe (fromMaybe)
 import Data.List (intersperse)
 import qualified Data.Map as M
 import Control.Applicative ((<$>), (<*>))
-import Control.Monad.RWS (RWST, asks, tell, get, put, lift)
+import Control.Monad.RWS (RWST, asks, tell, get, put, lift, runRWST)
 import Polar.Shader.Types
 
-data ShaderEnv = ShaderEnv
-    { envFunctions      :: M.Map String [AST]
-    , envInputs         :: M.Map String Int
-    , envOutputs        :: M.Map String Int
-    }
-type ShaderState = Type
-type ShaderOutput = (String, String)
-type ShaderM = RWST ShaderEnv ShaderOutput ShaderState (Either String)
+data GLSL150 = GLSL150
+instance Compiler GLSL150 where generate env _ = (\(_, _, w) -> w) <$> runRWST writeShaders env undefined
+
+type ShaderM = RWST CompilerEnv (String, String) Type (Either String)
 
 unrecognized :: String -> ShaderM a
 unrecognized name = lift $ Left ("unrecognized name (" ++ name ++ ")")
@@ -48,7 +44,7 @@ writeAST (NameInput name _) = tellCurrent ("a_" ++ name)
 writeAST (NameOutput name _) = tellCurrent ("o_" ++ name)
 
 writeFunction :: String -> Maybe String -> ShaderM ()
-writeFunction name mActualName = M.lookup name <$> asks envFunctions >>= \case
+writeFunction name mActualName = M.lookup name <$> asks compilerFunctions >>= \case
     Nothing -> unrecognized name
     Just asts -> do
         tellCurrent ("void " ++ fromMaybe name mActualName ++ "(){")
@@ -65,11 +61,11 @@ writeShaders :: ShaderM ()
 writeShaders = do
     put Vertex
     tellCurrent (version ++ ext ++ precision)
-    M.toList <$> asks envInputs >>= writeLocatables "in" "a_" 0
+    M.toList <$> asks compilerInputs >>= writeLocatables "in" "a_" 0
     writeFunction "vertex" (Just "main")
     put Pixel
     tellCurrent (version ++ ext ++ precision)
-    M.toList <$> asks envOutputs >>= writeLocatables "out" "o_" 0
+    M.toList <$> asks compilerOutputs >>= writeLocatables "out" "o_" 0
     writeFunction "pixel" (Just "main")
   where version = "#version 150\n"
         ext = "#extension GL_ARB_explicit_attrib_location: enable\n"

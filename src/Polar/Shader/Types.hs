@@ -1,5 +1,6 @@
 module Polar.Shader.Types where
 
+import qualified Data.Map as M
 import Control.Applicative ((<$>))
 
 data Token = EqualsT
@@ -21,6 +22,14 @@ data AST = Assignment AST AST
            deriving (Eq, Show)
 
 data Type = Vertex | Pixel
+
+data CompilerEnv = CompilerEnv
+    { compilerFunctions :: M.Map String [AST]
+    , compilerInputs    :: M.Map String Int
+    , compilerOutputs   :: M.Map String Int
+    }
+
+class Compiler a where generate :: CompilerEnv -> a -> Either String (String, String)
 
 astComponents :: AST -> Either String Int
 astComponents (Assignment lhs _) = astComponents lhs
