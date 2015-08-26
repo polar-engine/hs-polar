@@ -54,15 +54,13 @@ shutdown win _ = liftIO (destroyWindow win)
 gl :: IO a -> IO a
 gl action = do
     result <- action
-    GL.get GL.errors >>= \case
-        [] -> return ()
-        xs -> do
+    GL.get GL.errors >>= unlessEmpty (\xs -> do
             mapM_ printError xs
-            currentCallStack >>= \case
-                [] -> return ()
-                stack -> putStrLn $ (renderStack . init . init) stack
+            currentCallStack >>= unlessEmpty (putStrLn . renderStack . init . init)
+        )
     return result
   where printError (GL.Error category message) = putStrLn ("[ERROR] " ++ show category ++ " (" ++ message ++ ")")
+        unlessEmpty f xs = unless (null xs) (f xs)
 
 setupVertices :: IO (GL.VertexArrayObject, GL.BufferObject)
 setupVertices = do
