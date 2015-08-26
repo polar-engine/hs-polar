@@ -2,6 +2,7 @@
 
 module Polar.Renderer.OpenGL_3_2 where
 
+import Data.Function.Apply
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as M
 import Control.Applicative ((<$>))
@@ -54,10 +55,9 @@ shutdown win _ = liftIO (destroyWindow win)
 gl :: IO a -> IO a
 gl action = do
     result <- action
-    GL.get GL.errors >>= unlessEmpty (\xs -> do
+    GL.get GL.errors >>= unlessEmpty `apply` \xs -> do
             mapM_ printError xs
             currentCallStack >>= unlessEmpty (putStrLn . renderStack . init . init)
-        )
     return result
   where printError (GL.Error category message) = putStrLn ("[ERROR] " ++ show category ++ " (" ++ message ++ ")")
         unlessEmpty f xs = unless (null xs) (f xs)
