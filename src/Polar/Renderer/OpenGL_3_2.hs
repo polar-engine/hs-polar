@@ -27,6 +27,30 @@ vertices = [ -1, -1
            ,  0,  1
            ]
 
+startup :: Listener
+startup _ = do
+    win <- liftIO (setupWindow viewport title)
+    liftIO setupVertices
+    liftIO setupShader
+    liftIO . gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
+    liftIO (GL.clearColor $= GL.Color4 0 0 0 0)
+    listen TickEvent (render win)
+    listen ShutdownEvent (shutdown win)
+  where viewport = Box (Point 50) (Point2 640 360)
+        title = "Game"
+
+render :: GLFW.Window -> Listener
+render win _ = liftIO (GLFW.windowShouldClose win) >>= \case
+    True  -> exit
+    False -> liftIO $ do
+        gl $ GL.clear [GL.ColorBuffer, GL.DepthBuffer]
+        gl $ GL.drawArrays GL.Triangles 0 (fromIntegral (length vertices))
+        GLFW.swapBuffers win
+        GLFW.pollEvents
+
+shutdown :: GLFW.Window -> Listener
+shutdown win _ = liftIO (destroyWindow win)
+
 gl :: IO a -> IO a
 gl action = do
     result <- action
@@ -51,8 +75,8 @@ setupVertices = do
     gl $ GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float 0 nullPtr)
     return (vao, vbo)
 
-setupShader :: String -> GL.ShaderType -> IO GL.Shader
-setupShader contents shaderType= do
+makeShader :: String -> GL.ShaderType -> IO GL.Shader
+makeShader contents shaderType= do
     shader <- gl (GL.createShader shaderType)
     gl (GL.shaderSourceBS shader $= BS.pack contents)
     gl (GL.compileShader shader)
@@ -62,8 +86,8 @@ setupShader contents shaderType= do
         putStrLn ("[INFOLOG] " ++ infoLog)
     return shader
 
-setupProgram :: [GL.Shader] -> IO GL.Program
-setupProgram shaders = do
+makeProgram :: [GL.Shader] -> IO GL.Program
+makeProgram shaders = do
     program <- gl GL.createProgram
     gl (GL.attachedShaders program $= shaders)
     gl (GL.linkProgram program)
@@ -73,37 +97,15 @@ setupProgram shaders = do
         putStrLn ("[INFOLOG] " ++ infoLog)
     return program
 
-initShaderProgram :: IO ()
-initShaderProgram = f <$> readFile "main.shader" >>= \case
+setupShader :: IO ()
+setupShader = f <$> readFile "main.shader" >>= \case
     Left err              -> putStrLn err
     Right (vertex, pixel) -> do
-        vsh <- setupShader vertex GL.VertexShader
-        fsh <- setupShader pixel GL.FragmentShader
-        program <- setupProgram [vsh, fsh]
+        vsh <- makeShader vertex GL.VertexShader
+        fsh <- makeShader pixel GL.FragmentShader
+        program <- makeProgram [vsh, fsh]
         gl (GL.currentProgram $= Just program)
   where f contents = compile contents (M.fromList [("vertex", 2)]) (M.fromList [("color", 4)]) GLSL150
-
-startup :: Listener
-startup _ = do
-    win <- liftIO $ setupWindow (Box (Point 50) (Point2 640 360)) "Game"
-    objs <- liftIO setupVertices
-    liftIO initShaderProgram
-    liftIO $ gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
-    liftIO (GL.clearColor $= GL.Color4 0 0 0 0)
-    listen TickEvent (render win objs)
-    listen ShutdownEvent (shutdown win)
-
-render :: GLFW.Window -> (GL.VertexArrayObject, GL.BufferObject) -> Notification -> PolarIO ()
-render win (vao, vbo) _ = liftIO (GLFW.windowShouldClose win) >>= \case
-    True  -> exit
-    False -> liftIO $ do
-        gl $ GL.clear [GL.ColorBuffer, GL.DepthBuffer]
-        gl $ GL.drawArrays GL.Triangles 0 (fromIntegral (length vertices))
-        GLFW.swapBuffers win
-        GLFW.pollEvents
-
-shutdown :: GLFW.Window -> Listener
-shutdown win _ = liftIO (destroyWindow win)
 
 setupWindow :: Box Int -> String -> IO GLFW.Window
 setupWindow (Box origin size) title = do
