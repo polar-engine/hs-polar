@@ -8,6 +8,7 @@
 
 module Polar.Types where
 
+import Data.Foldable (Foldable)
 import Control.Lens.TH (makeFields)
 
 import Data.Ratio
