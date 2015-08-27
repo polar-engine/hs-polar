@@ -95,15 +95,12 @@ data Notification = StartupNote | ShutdownNote | TickNote (Ratio Integer)
 
 type Listener = Notification -> PolarIO ()
 
-instance Show Listener where show _ = "Listener <native code>"
-
-data Engine = Engine
-    { engineTitle     :: String
-    , engineStartup   :: PolarIO ()
-    , engineListeners :: M.Map Event [Listener]
-    , engineWillExit  :: Bool
-    , engineViewport  :: Box Int
-    }
+data Engine = Engine { engineTitle     :: String
+                     , engineStartup   :: PolarIO ()
+                     , engineListeners :: M.Map Event [Listener]
+                     , engineWillExit  :: Bool
+                     , engineViewport  :: Box Int
+                     }
 
 defaultEngine :: Engine
 defaultEngine = Engine
