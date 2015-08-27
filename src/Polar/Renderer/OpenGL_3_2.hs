@@ -8,6 +8,7 @@ import qualified Data.Map as M
 import Control.Applicative ((<$>))
 import Control.Monad (unless)
 import Control.Monad.State (liftIO)
+import Control.Lens ((^.))
 import System.IO (stderr, hPutStrLn)
 import Foreign (nullPtr)
 import Foreign.Storable (sizeOf)
@@ -37,7 +38,7 @@ startup _ = do
     liftIO (GL.clearColor $= GL.Color4 0 0 0 0)
     listen TickEvent (render win)
     listen ShutdownEvent (shutdown win)
-  where viewport = Box (Point 50) (Point2 640 360)
+  where viewport = Box (Point 50 50 0 0) (Point 640 360 0 0)
         title = "Game"
 
 render :: GLFW.Window -> Listener
@@ -113,13 +114,13 @@ setupWindow (Box origin size) title = do
     GLFW.windowHint (GLFW.WindowHint'ContextVersionMinor 2)
     GLFW.windowHint (GLFW.WindowHint'OpenGLForwardCompat True)
     GLFW.windowHint (GLFW.WindowHint'OpenGLProfile GLFW.OpenGLProfile'Core)
-    GLFW.createWindow (x size) (y size) title Nothing Nothing >>= \case
+    GLFW.createWindow (size ^. x) (size ^. y) title Nothing Nothing >>= \case
         Nothing  -> do
             GLFW.terminate
             fail "failed to create window"
         Just win -> do
             GLFW.makeContextCurrent (Just win)
-            GLFW.setWindowPos win (x origin) (y origin)
+            GLFW.setWindowPos win (origin ^. x) (origin ^. y)
             return win
 
 destroyWindow :: GLFW.Window -> IO ()

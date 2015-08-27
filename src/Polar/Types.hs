@@ -1,7 +1,14 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Polar.Types where
+
+import Control.Lens.TH (makeFields)
 
 import Data.Ratio
 import qualified Data.Map as M
@@ -9,84 +16,36 @@ import Control.Monad.State
 import qualified Graphics.Rendering.OpenGL as GL (Color4(..))
 import Graphics.UI.GLFW (KeyCallback)
 
-data Point a = Point a | Point2 a a | Point3 a a a
-               deriving Show
-
-x :: Point a -> a
-x (Point w) = w
-x (Point2 x' _) = x'
-x (Point3 x' _ _) = x'
-
-y :: Point a -> a
-y (Point w) = w
-y (Point2 _ y') = y'
-y (Point3 _ y' _) = y'
-
-z :: Point a -> a
-z (Point w) = w
-z (Point2 _ z') = z'
-z (Point3 _ _ z') = z'
-
-defaultPoint :: Num a => Point a
-defaultPoint = Point2 0 0
-
-instance Functor Point where
-    fmap f (Point w)      = Point (f w)
-    fmap f (Point2 x y)   = Point2 (f x) (f y)
-    fmap f (Point3 x y z) = Point3 (f x) (f y) (f z)
-
-pointMapBinary :: Num a => (a -> a -> b) -> Point a -> Point a -> Point b
-pointMapBinary f (Point w1)        (Point w2)        = Point (f w1 w2)
-pointMapBinary f (Point2 x1 y1)    (Point2 x2 y2)    = Point2 (f x1 x2) (f y1 y2)
-pointMapBinary f (Point3 x1 y1 z1) (Point3 x2 y2 z2) = Point3 (f x1 x2) (f y1 y2) (f z1 z2)
-pointMapBinary f (Point w1)        p2@(Point2 {})    = pointMapBinary f (Point2 w1 w1) p2
-pointMapBinary f (Point w1)        p2@(Point3 {})    = pointMapBinary f (Point3 w1 w1 w1) p2
-pointMapBinary f (Point2 x1 y1)    p2@(Point3 {})    = pointMapBinary f (Point3 x1 y1 0) p2
-pointMapBinary f p1 p2 = pointMapBinary (flip f) p2 p1
-
-instance (Num a, Eq a) => Eq (Point a) where
-    Point w1        == Point w2        = w1 == w2
-    Point w1        == Point2 x2 y2    = w1 == x2
-                                      && w1 == y2
-    Point w1        == Point3 x2 y2 z2 = w1 == x2
-                                      && w1 == y2
-                                      && w1 == z2
-    Point2 x1 y1    == Point2 x2 y2    = x1 == x2
-                                      && y1 == y2
-    Point2 x1 y1    == Point3 x2 y2 z2 = x1 == x2
-                                      && y1 == y2
-                                      && 0  == z2
-    Point3 x1 y1 z1 == Point3 x2 y2 z2 = x1 == x2
-                                      && y1 == y2
-                                      && z1 == z2
-    p1 == p2 = p2 == p1
-    p1 /= p2 = not (p1 == p2)
+data Point a = Point { _pointX :: a
+                     , _pointY :: a
+                     , _pointZ :: a
+                     , _pointW :: a
+                     } deriving (Eq, Show, Functor, Foldable)
+makeFields ''Point
 
 instance Num a => Num (Point a) where
-    p1 + p2 = pointMapBinary (+) p1 p2
-    p1 * p2 = pointMapBinary (*) p1 p2
-    p1 - p2 = pointMapBinary (-) p1 p2
+    p1 + p2 = foldr (+) (fromInteger 0) [p1, p2]
+    p1 * p2 = foldr (*) (fromInteger 0) [p1, p2]
+    p1 - p2 = foldl (-) (fromInteger 0) [p1, p2]
     negate = fmap negate
     abs = fmap abs
     signum = fmap signum
-    fromInteger i = Point3 i' i' i' where i' = fromInteger i
+    fromInteger x = Point i i i i where i = fromInteger x
 
+defaultPoint :: Num a => Point a
+defaultPoint = fromInteger 0
+
+-- TODO: make HasMagnitude somehow using Control.Lens.TH
 magnitude :: RealFloat a => Point a -> a
-magnitude (Point _) = undefined
-magnitude (Point2 x y) = x * cos (atan2 y x)
-magnitude (Point3 x y z) = sqrt (x * x + y * y + z * z)
+magnitude (Point x y z w) = sqrt (x * x + y * y + z * z + w * w)
 
-data Box a = Box
-    { origin :: Point a
-    , size   :: Point a
-    } deriving Show
+data Box a = Box { _boxOrigin :: Point a
+                 , _boxSize   :: Point a
+                 } deriving (Eq, Show)
+makeFields ''Box
 
 defaultBox :: Num a => Box a
 defaultBox = Box defaultPoint defaultPoint
-
-instance (Num a, Eq a) => Eq (Box a) where
-    Box o1 s1 == Box o2 s2 = o1 == s1 && o2 == s2
-    r1 /= r2 = not (r1 == r2)
 
 data Color = Color3 Double Double Double
            | Color4 Double Double Double Double
@@ -152,7 +111,7 @@ defaultEngine = Engine
     , engineStartup   = return ()
     , engineListeners = M.empty
     , engineWillExit  = False
-    , engineViewport  = Box (Point2 0 0) (Point2 1280 720)
+    , engineViewport  = Box (defaultPoint) (Point 1280 720 0 0)
     }
 
 type Polar = State Engine
@@ -209,9 +168,3 @@ mapViewport f v = v {engineViewport = f (engineViewport v)}
 
 dimensions :: Options -> (Int, Int)
 dimensions opts = (optsWidth opts, optsHeight opts)
-
-mapOrigin :: (Point a -> Point a) -> Box a -> Box a
-mapOrigin f v = v {origin = f (origin v)}
-
-mapSize :: (Point a -> Point a) -> Box a -> Box a
-mapSize f v = v {size = f (size v)}
