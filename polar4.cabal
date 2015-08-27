@@ -17,14 +17,14 @@ library
                        Polar.Shader.Tokenizer,
                        Polar.Shader.Parser,
                        Polar.Shader.Processor
-  build-depends:       base >=4.7, mtl >=2.2, containers >=0.5.5, OpenGL >=2.12, GLFW-b >=1.4.7, transformers >=0.4.2, bytestring >=0.10
+  build-depends:       base >=4.7, mtl >=2.2, containers >=0.5.5, OpenGL >=2.12, GLFW-b >=1.4.7, transformers >=0.4.2, bytestring >=0.10, lens >=4.12
   hs-source-dirs:      src
   ghc-options:         -W
   ghc-prof-options:    -fprof-auto-calls
 
 executable polar4
   main-is:             Main.hs
-  build-depends:       base >=4.7, mtl >=2.2, containers >=0.5.5, OpenGL >=2.12, GLFW-b >=1.4.7, transformers >=0.4.2, bytestring >=0.10
+  build-depends:       base >=4.7, mtl >=2.2, containers >=0.5.5, OpenGL >=2.12, GLFW-b >=1.4.7, transformers >=0.4.2, bytestring >=0.10, lens >=4.12
   hs-source-dirs:      src
   ghc-options:         -W
   ghc-prof-options:    -fprof-auto-calls
