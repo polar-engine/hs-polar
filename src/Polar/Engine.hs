@@ -3,6 +3,7 @@
 module Polar.Engine where
 
 import Control.Monad.State
+import Control.Lens (use)
 import System.IO (hSetBuffering, stdout, stderr, BufferMode(..))
 import Polar.Types
 import Polar.Listener (notify)
@@ -12,13 +13,13 @@ run = do
     liftIO $ do
         hSetBuffering stdout NoBuffering
         hSetBuffering stderr LineBuffering
-    gets engineStartup >>= id
+    use startup >>= id
     notify StartupEvent StartupNote
     loop
     notify ShutdownEvent ShutdownNote
 
 loop :: PolarIO ()
-loop = gets engineWillExit >>= \case
+loop = use willExit >>= \case
     True  -> return ()
     False -> notify TickEvent (TickNote 1) >> loop
 

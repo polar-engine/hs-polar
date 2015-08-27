@@ -87,32 +87,32 @@ type KeyCB = KeyCallback
 {- Event        - event types to be listened for
  - Notification - notification types to be received on events
  -}
-
 data Event = StartupEvent | ShutdownEvent | TickEvent
              deriving (Eq, Ord)
-
 data Notification = StartupNote | ShutdownNote | TickNote (Ratio Integer)
-
-type Listener = Notification -> PolarIO ()
-
-data Engine = Engine { engineTitle     :: String
-                     , engineStartup   :: PolarIO ()
-                     , engineListeners :: M.Map Event [Listener]
-                     , engineWillExit  :: Bool
-                     , engineViewport  :: Box Int
-                     }
-
-defaultEngine :: Engine
-defaultEngine = Engine
-    { engineTitle     = "Polar Engine 4"
-    , engineStartup   = return ()
-    , engineListeners = M.empty
-    , engineWillExit  = False
-    , engineViewport  = Box (defaultPoint) (Point 1280 720 0 0)
-    }
 
 type Polar = State Engine
 type PolarIO = StateT Engine IO
+
+type Listener = Notification -> PolarIO ()
+
+data Engine = Engine { _engineTitle     :: String
+                     , _engineStartup   :: PolarIO ()
+                     , _engineListeners :: M.Map Event [Listener]
+                     , _engineWillExit  :: Bool
+                     , _engineViewport  :: Box Int
+                     }
+
+makeFields ''Engine
+
+defaultEngine :: Engine
+defaultEngine = Engine
+    { _engineTitle     = "Polar Engine 4"
+    , _engineStartup   = return ()
+    , _engineListeners = M.empty
+    , _engineWillExit  = False
+    , _engineViewport  = Box (defaultPoint) (Point 1280 720 0 0)
+    }
 
 data Options = Options
     { optsWidth          :: Int
@@ -152,16 +152,6 @@ redColor        = Color3 1 0 0
 greenColor      = Color3 0 1 0
 blueColor       = Color3 0 0 1
 navyBlueColor   = Color3 0.02 0.05 0.1
-
-mapListeners :: (M.Map Event [Listener] -> M.Map Event [Listener])
-             -> Engine -> Engine
-mapListeners f v = v {engineListeners = f (engineListeners v)}
-
-setWillExit :: Bool -> Engine -> Engine
-setWillExit b v = v {engineWillExit = b}
-
-mapViewport :: (Box Int -> Box Int) -> Engine -> Engine
-mapViewport f v = v {engineViewport = f (engineViewport v)}
 
 dimensions :: Options -> (Int, Int)
 dimensions opts = (optsWidth opts, optsHeight opts)

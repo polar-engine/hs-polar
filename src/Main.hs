@@ -1,12 +1,13 @@
 module Main where
 
+import Control.Lens ((.~))
 import Polar (run)
 import Polar.Types
 import Polar.Listener
 import qualified Polar.Renderer.OpenGL_3_2 as Renderer
 
 main :: IO ()
-main = run defaultEngine { engineStartup = startup }
+main = run engine
 
-startup :: PolarIO ()
-startup = listen StartupEvent Renderer.startup
+engine :: Engine
+engine = startup .~ listen StartupEvent Renderer.startup $ defaultEngine
