@@ -7,14 +7,14 @@ import Control.Monad.State
 import Control.Lens (use)
 import System.IO (hSetBuffering, stdout, stderr, BufferMode(..))
 import Polar.Types
-import Polar.Listener (notify)
+import Polar.Listener
 
 run :: PolarIO ()
 run = do
     liftIO $ do
         hSetBuffering stdout NoBuffering
         hSetBuffering stderr LineBuffering
-    use startup >>= id
+    use startup >>= mapM_ (listen StartupEvent)
     notify StartupEvent StartupNote
     loop
     notify ShutdownEvent ShutdownNote

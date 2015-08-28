@@ -99,7 +99,7 @@ type PolarIO = StateT Engine IO
 type Listener = Notification -> PolarIO ()
 
 data Engine = Engine { _engineTitle     :: String
-                     , _engineStartup   :: PolarIO ()
+                     , _engineStartup   :: [Listener]
                      , _engineListeners :: M.Map Event [Listener]
                      , _engineWillExit  :: Bool
                      , _engineViewport  :: Box Int
@@ -110,7 +110,7 @@ makeFields ''Engine
 defaultEngine :: Engine
 defaultEngine = Engine
     { _engineTitle     = "Polar Engine 4"
-    , _engineStartup   = return ()
+    , _engineStartup   = []
     , _engineListeners = M.empty
     , _engineWillExit  = False
     , _engineViewport  = Box (defaultPoint) (Point 1280 720 0 0)
