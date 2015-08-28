@@ -88,9 +88,15 @@ type KeyCB = KeyCallback
 {- Event        - event types to be listened for
  - Notification - notification types to be received on events
  -}
-data Event = StartupEvent | ShutdownEvent | TickEvent
+data Event = StartupEvent
+           | ShutdownEvent
+           | ErrorEvent
+           | TickEvent
              deriving (Eq, Ord)
-data Notification = StartupNote | ShutdownNote | TickNote (Ratio Integer)
+data Notification = StartupNote
+                  | ShutdownNote
+                  | ErrorNote String
+                  | TickNote (Ratio Integer)
 
 type MonadPolarState = MonadState Engine
 type Polar = State Engine
