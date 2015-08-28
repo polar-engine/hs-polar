@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
@@ -91,6 +92,7 @@ data Event = StartupEvent | ShutdownEvent | TickEvent
              deriving (Eq, Ord)
 data Notification = StartupNote | ShutdownNote | TickNote (Ratio Integer)
 
+type MonadPolarState = MonadState Engine
 type Polar = State Engine
 type PolarIO = StateT Engine IO
 

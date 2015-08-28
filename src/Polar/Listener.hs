@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Polar.Listener where
 
@@ -6,7 +6,7 @@ import Data.Maybe (fromMaybe)
 import Control.Lens ((<>=), use, at)
 import Polar.Types
 
-listen :: Event -> Listener -> PolarIO ()
+listen :: MonadPolarState m => Event -> Listener -> m ()
 listen event listener = listeners . at event <>= Just [listener]
 
 notify :: Event -> Notification -> PolarIO ()
