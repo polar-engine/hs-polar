@@ -2,6 +2,7 @@
 
 module Polar.Renderer.OpenGL_3_2 where
 
+import Data.List (intercalate)
 import Data.Function.Apply
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as M
@@ -30,62 +31,63 @@ vertices = [ -1, -1
            ]
 
 startup :: Listener
-startup _ = do
-    win <- liftIO (setupWindow viewport title)
-    liftIO setupVertices
-    liftIO setupShader
-    liftIO . gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
-    liftIO (GL.clearColor $= GL.Color4 0 0 0 0)
-    listen TickEvent (render win)
-    listen ShutdownEvent (shutdown win)
+startup _ = setupWindow viewport title >>= \case
+    Nothing  -> return ()
+    Just win -> do
+        setupVertices
+        setupShader
+        gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
+        gl (GL.clearColor $= GL.Color4 0 0 0 0)
+        listen TickEvent (render win)
+        listen ShutdownEvent (shutdown win)
   where viewport = Box (Point 50 50 0 0) (Point 640 360 0 0)
         title = "Game"
 
 render :: GLFW.Window -> Listener
 render win _ = liftIO (GLFW.windowShouldClose win) >>= \case
     True  -> exit
-    False -> liftIO $ do
+    False -> do
         gl $ GL.clear [GL.ColorBuffer, GL.DepthBuffer]
         gl $ GL.drawArrays GL.Triangles 0 (fromIntegral (length vertices))
-        GLFW.swapBuffers win
-        GLFW.pollEvents
+        liftIO (GLFW.swapBuffers win)
+        liftIO GLFW.pollEvents
 
 shutdown :: GLFW.Window -> Listener
 shutdown win _ = liftIO (destroyWindow win)
 
-gl :: IO a -> IO a
+gl :: IO a -> PolarIO a
 gl action = do
-    result <- action
-    GL.get GL.errors >>= unlessEmpty `apply` \xs -> do
-            mapM_ printError xs
-            currentCallStack >>= unlessEmpty (putStrLn . renderStack . init . init)
+    result <- liftIO action
+    liftIO (GL.get GL.errors) >>= unlessEmpty `apply` \xs -> do
+            stk <- renderStack . init . init <$> liftIO currentCallStack
+            notify ErrorEvent $ ErrorNote (intercalate "\n" (showGLError <$> xs) ++ '\n' : stk)
     return result
-  where printError (GL.Error category message) = putStrLn ("[ERROR] " ++ show category ++ " (" ++ message ++ ")")
+  where showGLError (GL.Error category message) = show category ++ " (" ++ message ++ ")"
         unlessEmpty f xs = unless (null xs) (f xs)
 
-setupVertices :: IO (GL.VertexArrayObject, GL.BufferObject)
+setupVertices :: PolarIO (GL.VertexArrayObject, GL.BufferObject)
 setupVertices = do
     vao <- gl GL.genObjectName
     gl $ GL.bindVertexArrayObject $= Just vao
     vbo <- gl GL.genObjectName
     gl $ GL.bindBuffer GL.ArrayBuffer $= Just vbo
-    withArray vertices $ \buffer -> gl $
+    gl $ withArray vertices $ \buffer ->
         GL.bufferData GL.ArrayBuffer $= (fromIntegral (length vertices * sizeOf (head vertices)), buffer, GL.StaticDraw)
     gl $ GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float 0 nullPtr)
     return (vao, vbo)
 
-makeShader :: String -> GL.ShaderType -> IO GL.Shader
-makeShader contents shaderType= do
+makeShader :: String -> GL.ShaderType -> PolarIO GL.Shader
+makeShader contents shaderType = do
     shader <- gl (GL.createShader shaderType)
     gl (GL.shaderSourceBS shader $= BS.pack contents)
     gl (GL.compileShader shader)
     status <- gl $ GL.get (GL.compileStatus shader)
     unless status $ do
         infoLog <- gl $ GL.get (GL.shaderInfoLog shader)
-        putStrLn ("[INFOLOG] " ++ infoLog)
+        notify ErrorEvent (ErrorNote infoLog)
     return shader
 
-makeProgram :: [GL.Shader] -> IO GL.Program
+makeProgram :: [GL.Shader] -> PolarIO GL.Program
 makeProgram shaders = do
     program <- gl GL.createProgram
     gl (GL.attachedShaders program $= shaders)
@@ -93,12 +95,12 @@ makeProgram shaders = do
     status <- gl $ GL.get (GL.linkStatus program)
     unless status $ do
         infoLog <- gl $ GL.get (GL.programInfoLog program)
-        putStrLn ("[INFOLOG] " ++ infoLog)
+        notify ErrorEvent (ErrorNote infoLog)
     return program
 
-setupShader :: IO ()
-setupShader = f <$> readFile "main.shader" >>= \case
-    Left err              -> putStrLn err
+setupShader :: PolarIO ()
+setupShader = f <$> liftIO (readFile "main.shader") >>= \case
+    Left err              -> notify ErrorEvent (ErrorNote err)
     Right (vertex, pixel) -> do
         vsh <- makeShader vertex GL.VertexShader
         fsh <- makeShader pixel GL.FragmentShader
@@ -106,22 +108,24 @@ setupShader = f <$> readFile "main.shader" >>= \case
         gl (GL.currentProgram $= Just program)
   where f contents = compile contents (M.fromList [("vertex", 2)]) (M.fromList [("color", 4)]) GLSL150
 
-setupWindow :: Box Int -> String -> IO GLFW.Window
+setupWindow :: Box Int -> String -> PolarIO (Maybe GLFW.Window)
 setupWindow (Box origin size) title = do
-    GLFW.setErrorCallback (Just errorCB)
-    GLFW.init >>= \succeeded -> unless succeeded (fail "failed to init GLFW")
-    GLFW.windowHint (GLFW.WindowHint'ContextVersionMajor 3)
-    GLFW.windowHint (GLFW.WindowHint'ContextVersionMinor 2)
-    GLFW.windowHint (GLFW.WindowHint'OpenGLForwardCompat True)
-    GLFW.windowHint (GLFW.WindowHint'OpenGLProfile GLFW.OpenGLProfile'Core)
-    GLFW.createWindow (size ^. x) (size ^. y) title Nothing Nothing >>= \case
+    liftIO $ GLFW.setErrorCallback (Just errorCB)
+    liftIO GLFW.init >>= \succeeded -> unless succeeded `apply` notify ErrorEvent (ErrorNote "failed to init GLFW")
+    liftIO $ do
+        GLFW.windowHint (GLFW.WindowHint'ContextVersionMajor 3)
+        GLFW.windowHint (GLFW.WindowHint'ContextVersionMinor 2)
+        GLFW.windowHint (GLFW.WindowHint'OpenGLForwardCompat True)
+        GLFW.windowHint (GLFW.WindowHint'OpenGLProfile GLFW.OpenGLProfile'Core)
+    liftIO `apply` GLFW.createWindow (size ^. x) (size ^. y) title Nothing Nothing >>= \case
         Nothing  -> do
-            GLFW.terminate
-            fail "failed to create window"
+            liftIO GLFW.terminate
+            notify ErrorEvent (ErrorNote "failed to create window")
+            return Nothing
         Just win -> do
-            GLFW.makeContextCurrent (Just win)
-            GLFW.setWindowPos win (origin ^. x) (origin ^. y)
-            return win
+            liftIO $ GLFW.makeContextCurrent (Just win)
+            liftIO $ GLFW.setWindowPos win (origin ^. x) (origin ^. y)
+            return (Just win)
 
 destroyWindow :: GLFW.Window -> IO ()
 destroyWindow win = do
