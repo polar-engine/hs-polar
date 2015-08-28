@@ -10,4 +10,6 @@ main :: IO ()
 main = run engine
 
 engine :: Engine
-engine = startup .~ listen StartupEvent Renderer.startup $ defaultEngine
+engine = startup .~ listen StartupEvent `mapM_`
+    [ Renderer.startup
+    ] $ defaultEngine
