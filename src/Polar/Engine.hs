@@ -2,6 +2,7 @@
 
 module Polar.Engine where
 
+import Data.Function.Apply
 import Control.Monad.State
 import Control.Lens (use)
 import System.IO (hSetBuffering, stdout, stderr, BufferMode(..))
@@ -19,9 +20,9 @@ run = do
     notify ShutdownEvent ShutdownNote
 
 loop :: PolarIO ()
-loop = use willExit >>= \case
-    True  -> return ()
-    False -> notify TickEvent (TickNote 1) >> loop
+loop = use willExit >>= flip unless `apply` do
+    notify TickEvent (TickNote 1)
+    loop
 
 {-
 run' :: PolarIO ()
