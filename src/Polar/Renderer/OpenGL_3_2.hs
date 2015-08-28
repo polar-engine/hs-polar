@@ -132,5 +132,6 @@ destroyWindow win = do
     GLFW.destroyWindow win
     GLFW.terminate
 
+-- TODO: communicate errors back into PolarIO with a channel
 errorCB :: GLFW.ErrorCallback
 errorCB _ desc = hPutStrLn stderr desc
