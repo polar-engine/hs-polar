@@ -1,7 +1,6 @@
 module Polar.Shader.Tokenizer where
 
 import Data.Char (isAlphaNum)
-import Control.Applicative ((<$>))
 import Polar.Shader.Types
 
 isLiteralChar :: Char -> Bool

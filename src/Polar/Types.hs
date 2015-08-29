@@ -9,7 +9,6 @@
 
 module Polar.Types where
 
-import Data.Foldable (Foldable)
 import Data.Typeable (Typeable)
 import qualified Data.Map as M
 import Control.Monad.State

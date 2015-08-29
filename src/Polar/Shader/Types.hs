@@ -1,7 +1,6 @@
 module Polar.Shader.Types where
 
 import qualified Data.Map as M
-import Control.Applicative ((<$>))
 
 data Token = EqualsT
            | NewLineT

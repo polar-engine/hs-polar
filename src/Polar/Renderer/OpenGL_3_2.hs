@@ -6,7 +6,6 @@ import Data.List (intercalate)
 import Data.Function.Apply
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as M
-import Control.Applicative ((<$>))
 import Control.Monad (unless)
 import Control.Monad.State (liftIO)
 import Control.Lens ((^.))

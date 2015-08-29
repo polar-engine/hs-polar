@@ -5,7 +5,6 @@ module Polar.Shader.Compiler.GLSL150 where
 import Data.Maybe (fromMaybe)
 import Data.List (intersperse)
 import qualified Data.Map as M
-import Control.Applicative ((<$>), (<*>))
 import Control.Monad.RWS (RWST, asks, tell, get, put, lift, runRWST)
 import Polar.Shader.Types
 

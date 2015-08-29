@@ -3,7 +3,6 @@
 module Polar.Shader.Parser where
 
 import qualified Data.Map as M
-import Control.Applicative ((<$>))
 import Polar.Shader.Types
 
 parseAST :: [Token] -> Either String (AST, [Token])
