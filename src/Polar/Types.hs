@@ -84,22 +84,16 @@ data KeyEvent = KeyEvent Key KeyAction KeyModifiers
 
 type KeyCB = KeyCallback
 
-data Notification = StartupNote
-                  | ShutdownNote
-                  | ErrorNote
-                  | TickNote
-                    deriving (Eq, Ord, Show)
-
 type MonadPolarState = MonadState Engine
 type Polar = State Engine
 type PolarIO = StateT Engine IO
 
-type ListenerF a = Notification -> a -> PolarIO ()
+type ListenerF a = String -> a -> PolarIO ()
 data Listener = forall a. Typeable a => Listener (ListenerF a)
 
 data Engine = Engine { _engineTitle     :: String
                      , _engineStartup   :: [Listener]
-                     , _engineListeners :: M.Map Notification [Listener]
+                     , _engineListeners :: M.Map String [Listener]
                      , _engineWillExit  :: Bool
                      , _engineViewport  :: Box Int
                      }

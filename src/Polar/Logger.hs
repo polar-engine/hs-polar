@@ -10,10 +10,9 @@ startup :: ListenerF ()
 startup _ _ = do
     liftIO (hSetBuffering stdout NoBuffering)
     liftIO (hSetBuffering stderr LineBuffering)
-    listen ErrorNote (Listener onError)
+    listen "error" (Listener onError)
 
 onError :: ListenerF String
-onError ErrorNote err = do
+onError _ err = do
     stk <- liftIO currentCallStack
     liftIO $ hPutStrLn stderr ("[ERROR] " ++ err ++ '\n' : renderStack stk)
-onError _ _ = return ()

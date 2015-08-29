@@ -10,12 +10,12 @@ import Polar.Listener
 
 run :: PolarIO ()
 run = do
-    use startup >>= mapM_ (listen StartupNote)
-    notify StartupNote ()
+    use startup >>= mapM_ (listen "startup")
+    notify "startup" ()
     loop
-    notify ShutdownNote ()
+    notify "shutdown" ()
 
 loop :: PolarIO ()
 loop = use willExit >>= flip unless `apply` do
-    notify TickNote ()
+    notify "tick" ()
     loop

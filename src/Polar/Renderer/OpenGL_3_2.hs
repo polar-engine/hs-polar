@@ -36,8 +36,8 @@ startup _ _ = setupWindow viewport title >>= \case
         setupShader
         gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
         gl (GL.clearColor $= GL.Color4 0 0 0 0)
-        listen TickNote (Listener (render win))
-        listen ShutdownNote (Listener (shutdown win))
+        listen "tick" (Listener (render win))
+        listen "shutdown" (Listener (shutdown win))
   where viewport = Box (Point 50 50 0 0) (Point 640 360 0 0)
         title = "Game"
 
@@ -56,7 +56,7 @@ shutdown win _ _ = liftIO (destroyWindow win)
 gl :: IO a -> PolarIO a
 gl action = do
     result <- liftIO action
-    liftIO (GL.get GL.errors) >>= unlessEmpty `apply` \xs -> notify ErrorNote (intercalate "\n" (showGLError <$> xs))
+    liftIO (GL.get GL.errors) >>= unlessEmpty `apply` \xs -> notify "error" (intercalate "\n" (showGLError <$> xs))
     return result
   where showGLError (GL.Error category message) = show category ++ " (" ++ message ++ ")"
         unlessEmpty f xs = unless (null xs) (f xs)
@@ -80,7 +80,7 @@ makeShader contents shaderType = do
     status <- gl $ GL.get (GL.compileStatus shader)
     unless status $ do
         infoLog <- gl $ GL.get (GL.shaderInfoLog shader)
-        notify ErrorNote infoLog
+        notify "error" infoLog
     return shader
 
 makeProgram :: [GL.Shader] -> PolarIO GL.Program
@@ -91,12 +91,12 @@ makeProgram shaders = do
     status <- gl $ GL.get (GL.linkStatus program)
     unless status $ do
         infoLog <- gl $ GL.get (GL.programInfoLog program)
-        notify ErrorNote infoLog
+        notify "error" infoLog
     return program
 
 setupShader :: PolarIO ()
 setupShader = f <$> liftIO (readFile "main.shader") >>= \case
-    Left err              -> notify ErrorNote err
+    Left err              -> notify "error" err
     Right (vertex, pixel) -> do
         vsh <- makeShader vertex GL.VertexShader
         fsh <- makeShader pixel GL.FragmentShader
@@ -107,7 +107,7 @@ setupShader = f <$> liftIO (readFile "main.shader") >>= \case
 setupWindow :: Box Int -> String -> PolarIO (Maybe GLFW.Window)
 setupWindow (Box origin size) title = do
     liftIO $ GLFW.setErrorCallback (Just errorCB)
-    liftIO GLFW.init >>= \succeeded -> unless succeeded `apply` notify ErrorNote "failed to init GLFW"
+    liftIO GLFW.init >>= \succeeded -> unless succeeded `apply` notify "error" "failed to init GLFW"
     liftIO $ do
         GLFW.windowHint (GLFW.WindowHint'ContextVersionMajor 3)
         GLFW.windowHint (GLFW.WindowHint'ContextVersionMinor 2)
@@ -116,7 +116,7 @@ setupWindow (Box origin size) title = do
     liftIO `apply` GLFW.createWindow (size ^. x) (size ^. y) title Nothing Nothing >>= \case
         Nothing  -> do
             liftIO GLFW.terminate
-            notify ErrorNote "failed to create window"
+            notify "error" "failed to create window"
             return Nothing
         Just win -> do
             liftIO $ GLFW.makeContextCurrent (Just win)
