@@ -89,7 +89,7 @@ data Notification = StartupNote
                   | ShutdownNote
                   | ErrorNote
                   | TickNote
-                    deriving (Eq, Ord, Show, Typeable)
+                    deriving (Eq, Ord, Show)
 
 type MonadPolarState = MonadState Engine
 type Polar = State Engine
@@ -103,7 +103,7 @@ data Engine = Engine { _engineTitle     :: String
                      , _engineListeners :: M.Map Notification [Listener]
                      , _engineWillExit  :: Bool
                      , _engineViewport  :: Box Int
-                     } deriving Typeable
+                     }
 
 makeFields ''Engine
 
