@@ -10,4 +10,6 @@ main :: IO ()
 main = run engine
 
 engine :: Engine
-engine = startup .~ [Logger.startup, Renderer.startup] $ defaultEngine
+engine = startup .~ [ Listener Logger.startup
+                    , Listener Renderer.startup
+                    ] $ defaultEngine

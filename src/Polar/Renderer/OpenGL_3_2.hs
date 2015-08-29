@@ -14,7 +14,6 @@ import System.IO (stderr, hPutStrLn)
 import Foreign (nullPtr)
 import Foreign.Storable (sizeOf)
 import Foreign.Marshal.Array (withArray)
-import GHC.Stack (currentCallStack, renderStack)
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 import qualified Graphics.UI.GLFW as GLFW
@@ -30,21 +29,21 @@ vertices = [ -1, -1
            ,  0,  1
            ]
 
-startup :: Listener
-startup _ = setupWindow viewport title >>= \case
+startup :: ListenerF ()
+startup _ _ = setupWindow viewport title >>= \case
     Nothing  -> return ()
     Just win -> do
         setupVertices
         setupShader
         gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
         gl (GL.clearColor $= GL.Color4 0 0 0 0)
-        listen TickEvent (render win)
-        listen ShutdownEvent (shutdown win)
+        listen TickNote (Listener (render win))
+        listen ShutdownNote (Listener (shutdown win))
   where viewport = Box (Point 50 50 0 0) (Point 640 360 0 0)
         title = "Game"
 
-render :: GLFW.Window -> Listener
-render win _ = liftIO (GLFW.windowShouldClose win) >>= \case
+render :: GLFW.Window -> ListenerF ()
+render win _ _ = liftIO (GLFW.windowShouldClose win) >>= \case
     True  -> exit
     False -> do
         gl $ GL.clear [GL.ColorBuffer, GL.DepthBuffer]
@@ -52,15 +51,13 @@ render win _ = liftIO (GLFW.windowShouldClose win) >>= \case
         liftIO (GLFW.swapBuffers win)
         liftIO GLFW.pollEvents
 
-shutdown :: GLFW.Window -> Listener
-shutdown win _ = liftIO (destroyWindow win)
+shutdown :: GLFW.Window -> ListenerF ()
+shutdown win _ _ = liftIO (destroyWindow win)
 
 gl :: IO a -> PolarIO a
 gl action = do
     result <- liftIO action
-    liftIO (GL.get GL.errors) >>= unlessEmpty `apply` \xs -> do
-            stk <- renderStack . init . init <$> liftIO currentCallStack
-            notify ErrorEvent $ ErrorNote (intercalate "\n" (showGLError <$> xs) ++ '\n' : stk)
+    liftIO (GL.get GL.errors) >>= unlessEmpty `apply` \xs -> notify ErrorNote (intercalate "\n" (showGLError <$> xs))
     return result
   where showGLError (GL.Error category message) = show category ++ " (" ++ message ++ ")"
         unlessEmpty f xs = unless (null xs) (f xs)
@@ -84,7 +81,7 @@ makeShader contents shaderType = do
     status <- gl $ GL.get (GL.compileStatus shader)
     unless status $ do
         infoLog <- gl $ GL.get (GL.shaderInfoLog shader)
-        notify ErrorEvent (ErrorNote infoLog)
+        notify ErrorNote infoLog
     return shader
 
 makeProgram :: [GL.Shader] -> PolarIO GL.Program
@@ -95,12 +92,12 @@ makeProgram shaders = do
     status <- gl $ GL.get (GL.linkStatus program)
     unless status $ do
         infoLog <- gl $ GL.get (GL.programInfoLog program)
-        notify ErrorEvent (ErrorNote infoLog)
+        notify ErrorNote infoLog
     return program
 
 setupShader :: PolarIO ()
 setupShader = f <$> liftIO (readFile "main.shader") >>= \case
-    Left err              -> notify ErrorEvent (ErrorNote err)
+    Left err              -> notify ErrorNote err
     Right (vertex, pixel) -> do
         vsh <- makeShader vertex GL.VertexShader
         fsh <- makeShader pixel GL.FragmentShader
@@ -111,7 +108,7 @@ setupShader = f <$> liftIO (readFile "main.shader") >>= \case
 setupWindow :: Box Int -> String -> PolarIO (Maybe GLFW.Window)
 setupWindow (Box origin size) title = do
     liftIO $ GLFW.setErrorCallback (Just errorCB)
-    liftIO GLFW.init >>= \succeeded -> unless succeeded `apply` notify ErrorEvent (ErrorNote "failed to init GLFW")
+    liftIO GLFW.init >>= \succeeded -> unless succeeded `apply` notify ErrorNote "failed to init GLFW"
     liftIO $ do
         GLFW.windowHint (GLFW.WindowHint'ContextVersionMajor 3)
         GLFW.windowHint (GLFW.WindowHint'ContextVersionMinor 2)
@@ -120,7 +117,7 @@ setupWindow (Box origin size) title = do
     liftIO `apply` GLFW.createWindow (size ^. x) (size ^. y) title Nothing Nothing >>= \case
         Nothing  -> do
             liftIO GLFW.terminate
-            notify ErrorEvent (ErrorNote "failed to create window")
+            notify ErrorNote "failed to create window"
             return Nothing
         Just win -> do
             liftIO $ GLFW.makeContextCurrent (Just win)

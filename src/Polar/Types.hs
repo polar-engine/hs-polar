@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -9,11 +10,10 @@
 module Polar.Types where
 
 import Data.Foldable (Foldable)
-import Control.Lens.TH (makeFields)
-
-import Data.Ratio
+import Data.Typeable (Typeable)
 import qualified Data.Map as M
 import Control.Monad.State
+import Control.Lens.TH (makeFields)
 import qualified Graphics.Rendering.OpenGL as GL (Color4(..))
 import Graphics.UI.GLFW (KeyCallback)
 
@@ -85,28 +85,22 @@ data KeyEvent = KeyEvent Key KeyAction KeyModifiers
 
 type KeyCB = KeyCallback
 
-{- Event        - event types to be listened for
- - Notification - notification types to be received on events
- -}
-data Event = StartupEvent
-           | ShutdownEvent
-           | ErrorEvent
-           | TickEvent
-             deriving (Eq, Ord)
 data Notification = StartupNote
                   | ShutdownNote
-                  | ErrorNote String
-                  | TickNote (Ratio Integer)
+                  | ErrorNote
+                  | TickNote
+                    deriving (Eq, Ord, Show)
 
 type MonadPolarState = MonadState Engine
 type Polar = State Engine
 type PolarIO = StateT Engine IO
 
-type Listener = Notification -> PolarIO ()
+type ListenerF a = Notification -> a -> PolarIO ()
+data Listener = forall a. Typeable a => Listener (ListenerF a)
 
 data Engine = Engine { _engineTitle     :: String
                      , _engineStartup   :: [Listener]
-                     , _engineListeners :: M.Map Event [Listener]
+                     , _engineListeners :: M.Map Notification [Listener]
                      , _engineWillExit  :: Bool
                      , _engineViewport  :: Box Int
                      }

@@ -14,12 +14,12 @@ run = do
     liftIO $ do
         hSetBuffering stdout NoBuffering
         hSetBuffering stderr LineBuffering
-    use startup >>= mapM_ (listen StartupEvent)
-    notify StartupEvent StartupNote
+    use startup >>= mapM_ (listen StartupNote)
+    notify StartupNote ()
     loop
-    notify ShutdownEvent ShutdownNote
+    notify ShutdownNote ()
 
 loop :: PolarIO ()
 loop = use willExit >>= flip unless `apply` do
-    notify TickEvent (TickNote 1)
+    notify TickNote ()
     loop
