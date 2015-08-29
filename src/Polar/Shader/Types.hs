@@ -6,6 +6,8 @@ data Token = EqualsT
            | PlusT
            | AsteriskT
            | NewLineT
+           | BracketOpenT
+           | BracketCloseT
            | BraceOpenT
            | BraceCloseT
            | StatementEndT
@@ -35,7 +37,9 @@ data CompilerEnv = CompilerEnv
 class Compiler a where generate :: CompilerEnv -> a -> Either String (String, String)
 
 astComponents :: AST -> Either String Int
-astComponents (Assignment lhs _) = astComponents lhs
+astComponents (Assignment left _) = astComponents left
+astComponents (Additive left _) = astComponents left
+astComponents (Multiplicative left _) = astComponents left
 astComponents (Swizzle asts) = foldr (+) 0 <$> mapM astComponents asts
 astComponents (Literal _) = return 1
 astComponents (Identifier name) = Left ("unresolved identifier (" ++ name ++ ")")

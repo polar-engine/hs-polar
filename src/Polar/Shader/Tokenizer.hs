@@ -23,6 +23,8 @@ tokenize [] = return []
 tokenize ('=':xs) = (EqualsT :) <$> tokenize xs
 tokenize ('+':xs) = (PlusT :) <$> tokenize xs
 tokenize ('*':xs) = (AsteriskT :) <$> tokenize xs
+tokenize ('(':xs) = (BracketOpenT :) <$> tokenize xs
+tokenize (')':xs) = (BracketCloseT :) <$> tokenize xs
 tokenize ('{':xs) = (BraceOpenT :) <$> tokenize xs
 tokenize ('}':xs) = (BraceCloseT :) <$> tokenize xs
 tokenize (';':xs) = (StatementEndT :) <$> tokenize xs

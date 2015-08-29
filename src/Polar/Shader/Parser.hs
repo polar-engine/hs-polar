@@ -49,25 +49,25 @@ parseAdditive ts = case parseMultiplicative ts of
     _                         -> parseMultiplicative ts
 
 parseMultiplicative :: [Token] -> Either String (AST, [Token])
-parseMultiplicative ts = case parsePrimary ts of
+parseMultiplicative ts = case parseSwizzle ts of
     Right (left, AsteriskT : ts') -> case parseMultiplicative ts' of
         Right (right, rest)           -> return (Multiplicative left right, rest)
-        _                             -> parsePrimary ts
-    _                             -> parsePrimary ts
+        _                             -> parseSwizzle ts
+    _                             -> parseSwizzle ts
+
+parseSwizzle :: [Token] -> Either String (AST, [Token])
+parseSwizzle ts = case parsePrimary ts of
+    Right (ast, ts') -> case parseSwizzle ts' of
+        Right (Swizzle asts, rest) -> return (Swizzle (ast : asts), rest)
+        Right (ast2, rest)         -> return (Swizzle [ast, ast2], rest)
+        _                          -> parsePrimary ts
+    _                -> parsePrimary ts
 
 parsePrimary :: [Token] -> Either String (AST, [Token])
 parsePrimary [] = Left "unexpected end of stream"
-parsePrimary (IdentifierT name : EqualsT : ts) = do
-    (ast, rest) <- parsePrimary ts
-    return (Assignment (Identifier name) ast, rest)
-parsePrimary (IdentifierT x : ts) = case parsePrimary ts of
-    Left _                     -> return (identifier, ts)
-    Right (Swizzle asts, rest) -> return (Swizzle (identifier : asts), rest)
-    Right (ast, rest)          -> return (Swizzle [identifier, ast], rest)
-  where identifier = Identifier x
-parsePrimary (LiteralT x : ts) = case parsePrimary ts of
-    Left _                     -> return (literal, ts)
-    Right (Swizzle asts, rest) -> return (Swizzle (literal : asts), rest)
-    Right (ast, rest)          -> return (Swizzle [literal, ast], rest)
-  where literal = Literal x
+parsePrimary (IdentifierT name : ts) = return (Identifier name, ts)
+parsePrimary (LiteralT literal : ts) = return (Literal literal, ts)
+parsePrimary (BracketOpenT : ts) = case parseAST ts of
+    Right (ast, BracketCloseT : rest) -> return (ast, rest)
+    _                                 -> Left "no closing bracket"
 parsePrimary (t : _) = Left ("unexpected token (" ++ show t ++ ")")
