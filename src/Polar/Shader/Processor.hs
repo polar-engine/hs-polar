@@ -9,6 +9,8 @@ import Polar.Shader.Types
 type ProcessorM = RWST CompilerEnv ([(String, Int)], [(String, Int)]) Type (Either String)
 
 processAST :: AST -> ProcessorM AST
+processAST (Additive (Literal left) (Literal right)) = return $ Literal (left + right)
+processAST (Multiplicative (Literal left) (Literal right)) = return $ Literal (left * right)
 processAST (Assignment     left right) = processAST left >>= \ast -> Assignment     ast <$> processAST right
 processAST (Additive       left right) = processAST left >>= \ast -> Additive       ast <$> processAST right
 processAST (Multiplicative left right) = processAST left >>= \ast -> Multiplicative ast <$> processAST right
