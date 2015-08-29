@@ -14,6 +14,6 @@ startup _ _ = do
 
 onError :: ListenerF String
 onError ErrorNote err = do
-    stk <- renderStack <$> liftIO currentCallStack
-    liftIO $ hPutStrLn stderr ("[ERROR] " ++ err ++ '\n' : stk)
+    stk <- liftIO currentCallStack
+    liftIO $ hPutStrLn stderr ("[ERROR] " ++ err ++ '\n' : renderStack stk)
 onError _ _ = return ()
