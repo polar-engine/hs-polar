@@ -3,6 +3,8 @@ module Polar.Shader.Types where
 import qualified Data.Map as M
 
 data Token = EqualsT
+           | PlusT
+           | AsteriskT
            | NewLineT
            | BraceOpenT
            | BraceCloseT
@@ -12,6 +14,8 @@ data Token = EqualsT
              deriving (Eq, Show)
 
 data AST = Assignment AST AST
+         | Additive AST AST
+         | Multiplicative AST AST
          | Swizzle [AST]
          | Literal Double
          | Identifier String

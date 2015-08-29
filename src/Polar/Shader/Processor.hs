@@ -9,7 +9,9 @@ import Polar.Shader.Types
 type ProcessorM = RWST CompilerEnv ([(String, Int)], [(String, Int)]) Type (Either String)
 
 processAST :: AST -> ProcessorM AST
-processAST (Assignment lhs rhs) = processAST lhs >>= \ast -> Assignment ast <$> processAST rhs
+processAST (Assignment     lhs rhs) = processAST lhs >>= \ast -> Assignment ast     <$> processAST rhs
+processAST (Additive       lhs rhs) = processAST lhs >>= \ast -> Additive ast       <$> processAST rhs
+processAST (Multiplicative lhs rhs) = processAST lhs >>= \ast -> Multiplicative ast <$> processAST rhs
 processAST (Swizzle asts) = Swizzle <$> mapM processAST asts
 processAST ast@(Identifier name) = get >>= \case
     Vertex -> case name of

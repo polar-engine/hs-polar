@@ -31,6 +31,18 @@ writeAST (Assignment lhs rhs) = do
     lift $ (==) <$> astComponents lhs <*> astComponents rhs >>= \case
         False -> Left "number of components on lhs does not match number of components on rhs"
         True  -> return ()
+writeAST (Additive lhs rhs) = do
+    tellCurrent "("
+    writeAST lhs
+    tellCurrent "+"
+    writeAST rhs
+    tellCurrent ")"
+writeAST (Multiplicative lhs rhs) = do
+    tellCurrent "("
+    writeAST lhs
+    tellCurrent "*"
+    writeAST rhs
+    tellCurrent ")"
 writeAST ast@(Swizzle asts) = do
     components <- lift (astComponents ast)
     tellCurrent ("(vec" ++ show components ++ "(")
