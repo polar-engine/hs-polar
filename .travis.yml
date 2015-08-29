@@ -1,13 +1,15 @@
+language: haskell
 sudo: false
 addons:
   apt:
+    sources:
+      - hvr-ghc
     packages:
       - libxxf86vm-dev
       - libglfw-dev
+      - cabal-install-1.22
+      - ghc-7.10.2
 cache:
   directories:
     - $HOME/.ghc
     - $HOME/.cabal
-language: haskell
-ghc:
-  - "7.8"
