@@ -8,7 +8,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as M
 import Control.Monad (unless)
 import Control.Monad.State (liftIO)
-import Control.Lens ((^.))
+import Control.Lens ((^.), _1)
 import System.IO (stderr, hPutStrLn)
 import Foreign (nullPtr)
 import Foreign.Storable (sizeOf)
@@ -22,31 +22,30 @@ import Polar.Listener
 import Polar.Shader (compile)
 import Polar.Shader.Compiler.GLSL150 (GLSL150(..))
 
-vertices :: [GL.GLfloat]
-vertices = [ -1, -1
-           ,  1, -1
-           ,  0,  1
-           ]
+type Drawable = (Int, GL.VertexArrayObject, GL.BufferObject)
 
 startup :: ListenerF ()
 startup _ _ = setupWindow viewport title >>= \case
     Nothing  -> return ()
     Just win -> do
-        setupVertices
+        drawable <- setupDrawable [ -1, -1
+                                  ,  1, -1
+                                  ,  0,  1
+                                  ]
         setupShader
         gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
         gl (GL.clearColor $= GL.Color4 0 0 0 0)
-        listen "tick" (Listener (render win))
+        listen "tick" (Listener (render win drawable))
         listen "shutdown" (Listener (shutdown win))
   where viewport = Box (Point 50 50 0 0) (Point 640 360 0 0)
         title = "Game"
 
-render :: GLFW.Window -> ListenerF ()
-render win _ _ = liftIO (GLFW.windowShouldClose win) >>= \case
+render :: GLFW.Window -> Drawable -> ListenerF ()
+render win drawable _ _ = liftIO (GLFW.windowShouldClose win) >>= \case
     True  -> exit
     False -> do
         gl $ GL.clear [GL.ColorBuffer, GL.DepthBuffer]
-        gl $ GL.drawArrays GL.Triangles 0 (fromIntegral (length vertices))
+        gl $ GL.drawArrays GL.Triangles 0 (fromIntegral (drawable ^. _1))
         liftIO (GLFW.swapBuffers win)
         liftIO GLFW.pollEvents
 
@@ -61,8 +60,8 @@ gl action = do
   where showGLError (GL.Error category message) = show category ++ " (" ++ message ++ ")"
         unlessEmpty f xs = unless (null xs) (f xs)
 
-setupVertices :: PolarIO (GL.VertexArrayObject, GL.BufferObject)
-setupVertices = do
+setupDrawable :: [GL.GLfloat] -> PolarIO Drawable
+setupDrawable vertices = do
     vao <- gl GL.genObjectName
     gl $ GL.bindVertexArrayObject $= Just vao
     vbo <- gl GL.genObjectName
@@ -70,7 +69,7 @@ setupVertices = do
     gl $ withArray vertices $ \buffer ->
         GL.bufferData GL.ArrayBuffer $= (fromIntegral (length vertices * sizeOf (head vertices)), buffer, GL.StaticDraw)
     gl $ GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float 0 nullPtr)
-    return (vao, vbo)
+    return (length vertices, vao, vbo)
 
 makeShader :: String -> GL.ShaderType -> PolarIO GL.Shader
 makeShader contents shaderType = do
