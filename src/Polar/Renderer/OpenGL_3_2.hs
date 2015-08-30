@@ -101,7 +101,7 @@ setupShader = f <$> liftIO (readFile "main.shader") >>= \case
         fsh <- makeShader pixel GL.FragmentShader
         program <- makeProgram [vsh, fsh]
         gl (GL.currentProgram $= Just program)
-  where f contents = compile contents (M.fromList [("vertex", 2)]) (M.fromList [("color", 4)]) GLSL150
+  where f contents = compile contents (M.fromList []) (M.fromList [("vertex", 2)]) (M.fromList [("color", 4)]) GLSL150
 
 setupWindow :: Box Int -> String -> PolarIO (Maybe GLFW.Window)
 setupWindow (Box origin size) title = do

@@ -6,7 +6,7 @@ import qualified Data.Map as M
 import Control.Monad.RWS (RWST, asks, tell, get, put, lift)
 import Polar.Shader.Types
 
-type ProcessorM = RWST CompilerEnv ([(String, Int)], [(String, Int)]) Type (Either String)
+type ProcessorM = RWST CompilerEnv ([(String, Int)], [(String, Int)], [(String, Int)]) Type (Either String)
 
 processAST :: AST -> ProcessorM AST
 processAST (Additive (Literal left) (Literal right)) = return $ Literal (left + right)
@@ -15,15 +15,17 @@ processAST (Assignment     left right) = processAST left >>= \ast -> Assignment 
 processAST (Additive       left right) = processAST left >>= \ast -> Additive       ast <$> processAST right
 processAST (Multiplicative left right) = processAST left >>= \ast -> Multiplicative ast <$> processAST right
 processAST (Swizzle asts) = Swizzle <$> mapM processAST asts
-processAST ast@(Identifier name) = get >>= \case
-    Vertex -> case name of
-        "position" -> return NamePosition
-        _          -> M.lookup name <$> asks compilerInputs >>= \case
-            Just x  -> tell ([(name, x)], []) >> return (NameInput name x)
+processAST ast@(Identifier name) = M.lookup name <$> asks compilerGlobals >>= \case
+    Just x -> tell ([(name, x)], [], []) >> return (NameGlobal name x)
+    Nothing -> get >>= \case
+        Vertex -> case name of
+            "position" -> return NamePosition
+            _          -> M.lookup name <$> asks compilerInputs >>= \case
+                Just x  -> tell ([], [(name, x)], []) >> return (NameInput name x)
+                Nothing -> return ast
+        Pixel  -> M.lookup name <$> asks compilerOutputs >>= \case
+            Just x  -> tell ([], [], [(name, x)]) >> return (NameOutput name x)
             Nothing -> return ast
-    Pixel  -> M.lookup name <$> asks compilerOutputs >>= \case
-        Just x  -> tell ([], [(name, x)]) >> return (NameOutput name x)
-        Nothing -> return ast
 processAST ast = return ast
 
 process :: ProcessorM (M.Map String [AST])

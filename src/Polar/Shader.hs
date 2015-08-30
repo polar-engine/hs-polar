@@ -8,8 +8,8 @@ import Polar.Shader.Tokenizer (tokenize)
 import Polar.Shader.Parser (parse)
 import qualified Polar.Shader.Processor as Processor
 
-compile :: Compiler a => String -> M.Map String Int -> M.Map String Int -> a -> Either String (String, String)
-compile contents ins outs compiler = do
+compile :: Compiler a => String -> M.Map String Int -> M.Map String Int -> M.Map String Int -> a -> Either String (String, String)
+compile contents globals ins outs compiler = do
     fns <- tokenize contents >>= parse
-    (fns', _, (ins', outs')) <- runRWST Processor.process (CompilerEnv fns ins outs) undefined
-    generate (CompilerEnv fns' (M.fromList (nub ins')) (M.fromList (nub outs'))) compiler
+    (fns', _, (globals', ins', outs')) <- runRWST Processor.process (CompilerEnv fns globals ins outs) undefined
+    generate (CompilerEnv fns' (M.fromList (nub globals')) (M.fromList (nub ins')) (M.fromList (nub outs'))) compiler

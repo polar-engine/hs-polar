@@ -22,6 +22,7 @@ data AST = Assignment AST AST
          | Literal Double
          | Identifier String
          | NamePosition
+         | NameGlobal String Int
          | NameInput String Int
          | NameOutput String Int
            deriving (Eq, Show)
@@ -30,6 +31,7 @@ data Type = Vertex | Pixel
 
 data CompilerEnv = CompilerEnv
     { compilerFunctions :: M.Map String [AST]
+    , compilerGlobals   :: M.Map String Int
     , compilerInputs    :: M.Map String Int
     , compilerOutputs   :: M.Map String Int
     }
@@ -44,5 +46,6 @@ astComponents (Swizzle asts) = foldr (+) 0 <$> mapM astComponents asts
 astComponents (Literal _) = return 1
 astComponents (Identifier name) = Left ("unresolved identifier (" ++ name ++ ")")
 astComponents NamePosition = return 4
+astComponents (NameGlobal _ x) = return x
 astComponents (NameInput _ x) = return x
 astComponents (NameOutput _ x) = return x
