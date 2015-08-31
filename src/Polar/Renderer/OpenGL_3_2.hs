@@ -20,6 +20,7 @@ import Polar.Types
 import Polar.Control
 import Polar.Listener
 import Polar.Shader (compile)
+import Polar.Shader.Types (DataType(..))
 import Polar.Shader.Compiler.GLSL150 (GLSL150(..))
 
 type Drawable = (Int, GL.VertexArrayObject, GL.BufferObject)
@@ -101,7 +102,10 @@ setupShader = f <$> liftIO (readFile "main.shader") >>= \case
         fsh <- makeShader pixel GL.FragmentShader
         program <- makeProgram [vsh, fsh]
         gl (GL.currentProgram $= Just program)
-  where f contents = compile contents (M.fromList []) (M.fromList [("vertex", 2)]) (M.fromList [("color", 4)]) GLSL150
+  where f contents = compile contents
+            (M.fromList [("projection", DataMatrix4x4)])
+            (M.fromList [("vertex", DataFloat2)])
+            (M.fromList [("color", DataFloat4)]) GLSL150
 
 setupWindow :: Box Int -> String -> PolarIO (Maybe GLFW.Window)
 setupWindow (Box origin size) title = do
