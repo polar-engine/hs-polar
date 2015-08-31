@@ -53,17 +53,20 @@ instance HasComponents AST where
         l <- numComponents left
         (l ==) <$> numComponents right >>= \case
             True  -> return l
-            False -> Left "numbers of components on left does not match number of components on right"
+            False -> Left "number of components on left does not match number of components on right"
     numComponents (Additive left right) = do
         l <- numComponents left
         (l ==) <$> numComponents right >>= \case
             True  -> return l
-            False -> Left "numbers of components on left does not match number of components on right"
+            False -> Left "number of components on left does not match number of components on right"
     numComponents (Multiplicative left right) = do
         l <- numComponents left
-        (l ==) <$> numComponents right >>= \case
-            True  -> return l
-            False -> Left "numbers of components on left does not match number of components on right"
+        r <- numComponents right
+        if l == 16 && r == 4
+            then return 4
+            else (l ==) <$> numComponents right >>= \case
+                True  -> return l
+                False -> Left "number of components on left does not match number of components on right"
     numComponents (Swizzle []) = return 0
     numComponents (Swizzle (ast : asts)) = (+) <$> numComponents ast <*> numComponents (Swizzle asts)
     numComponents (Literal _) = return 1

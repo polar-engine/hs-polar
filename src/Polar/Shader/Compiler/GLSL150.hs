@@ -66,21 +66,24 @@ writeFunction name mActualName = M.lookup name <$> asks compilerFunctions >>= \c
         sequence (tellCurrent ";" `intersperse` map writeAST asts)
         tellCurrent ";}"
 
-writeLocatables :: String -> String -> Int -> [(String, DataType)] -> ShaderM ()
-writeLocatables _ _ _ [] = return ()
-writeLocatables qualifier prefix n ((name, ty):xs) = do
-    tellCurrent $ "layout(location=" ++ show n ++ ')' : qualifier ++ " " ++ showType ty ++ ' ' : prefix ++ name ++ ";"
-    writeLocatables qualifier prefix (succ n) xs
+writeLocatables :: Bool -> String -> String -> Int -> [(String, DataType)] -> ShaderM ()
+writeLocatables _ _ _ _ [] = return ()
+writeLocatables explicit qualifier prefix n ((name, ty):xs) = do
+    tellCurrent $ layout ++ qualifier ++ " " ++ showType ty ++ ' ' : prefix ++ name ++ ";"
+    writeLocatables explicit qualifier prefix (succ n) xs
+  where layout = if explicit then "layout(location=" ++ show n ++ ")" else ""
 
 writeShaders :: ShaderM ()
 writeShaders = do
     put ShaderVertex
     tellCurrent (version ++ ext ++ precision)
-    M.toList <$> asks compilerInputs >>= writeLocatables "in" "a_" 0
+    M.toList <$> asks compilerGlobals >>= writeLocatables False "uniform" "u_" 0
+    M.toList <$> asks compilerInputs >>= writeLocatables True "in" "a_" 0
     writeFunction "vertex" (Just "main")
     put ShaderPixel
     tellCurrent (version ++ ext ++ precision)
-    M.toList <$> asks compilerOutputs >>= writeLocatables "out" "o_" 0
+    M.toList <$> asks compilerGlobals >>= writeLocatables False "uniform" "u_" 0
+    M.toList <$> asks compilerOutputs >>= writeLocatables True "out" "o_" 0
     writeFunction "pixel" (Just "main")
   where version = "#version 150\n"
         ext = "#extension GL_ARB_explicit_attrib_location: enable\n"
