@@ -15,6 +15,7 @@ import Foreign.Storable (sizeOf)
 import Foreign.Marshal.Array (withArray)
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
+import qualified Graphics.Rendering.OpenGL.Raw as GL
 import qualified Graphics.UI.GLFW as GLFW
 import Polar.Types
 import Polar.Control
@@ -25,19 +26,29 @@ import Polar.Shader.Compiler.GLSL150 (GLSL150(..))
 
 type Drawable = (Int, GL.VertexArrayObject, GL.BufferObject)
 
+projection :: [GL.GLfloat]
+projection = [ 1.42815, 0.0,     0.0,       0.0
+             , 0.0,     1.42815, 0.0,       0.0
+             , 0.0,     0.0,     1.001001, -1.0
+             , 0.0,     0.0,     1.001001,  1.0
+             ]
+
 startup :: ListenerF ()
 startup _ _ = setupWindow viewport title >>= \case
     Nothing  -> return ()
-    Just win -> do
-        drawable <- setupDrawable [ -1, -1
-                                  ,  1, -1
-                                  ,  0,  1
-                                  ]
-        setupShader
-        gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
-        gl (GL.clearColor $= GL.Color4 0 0 0 0)
-        listen "tick" (Listener (render win drawable))
-        listen "shutdown" (Listener (shutdown win))
+    Just win -> setupShader >>= \case
+        Nothing      -> return ()
+        Just program -> do
+            (GL.UniformLocation loc) <- gl (GL.uniformLocation program "u_projection")
+            gl $ withArray projection $ \buffer -> GL.glUniformMatrix4fv loc 1 0 buffer
+            drawable <- setupDrawable [ -1, -1
+                                      ,  1, -1
+                                      ,  0,  1
+                                      ]
+            gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
+            gl (GL.clearColor $= GL.Color4 0 0 0 0)
+            listen "tick" (Listener (render win drawable))
+            listen "shutdown" (Listener (shutdown win))
   where viewport = Box (Point 50 50 0 0) (Point 640 360 0 0)
         title = "Game"
 
@@ -94,14 +105,15 @@ makeProgram shaders = do
         notify "error" infoLog
     return program
 
-setupShader :: PolarIO ()
+setupShader :: PolarIO (Maybe GL.Program)
 setupShader = f <$> liftIO (readFile "main.shader") >>= \case
-    Left err              -> notify "error" err
+    Left err              -> notify "error" err >> return Nothing
     Right (vertex, pixel) -> do
         vsh <- makeShader vertex GL.VertexShader
         fsh <- makeShader pixel GL.FragmentShader
         program <- makeProgram [vsh, fsh]
         gl (GL.currentProgram $= Just program)
+        return (Just program)
   where f contents = compile contents
             (M.fromList [("projection", DataMatrix4x4)])
             (M.fromList [("vertex", DataFloat2)])
