@@ -6,13 +6,10 @@ import Data.List (intercalate)
 import Data.Function.Apply
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as M
-import Control.Monad (unless)
-import Control.Monad.State (liftIO)
+import Control.Monad.State (unless, liftIO)
 import Control.Lens ((^.), _1)
 import System.IO (stderr, hPutStrLn)
-import Foreign (nullPtr)
-import Foreign.Storable (sizeOf)
-import Foreign.Marshal.Array (withArray)
+import Foreign (nullPtr, sizeOf, withArray)
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 import qualified Graphics.Rendering.OpenGL.Raw as GL
