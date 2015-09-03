@@ -23,12 +23,18 @@ import Polar.Shader.Compiler.GLSL150 (GLSL150(..))
 
 type Drawable = (Int, GL.VertexArrayObject, GL.BufferObject)
 
+fov = 70.0
+zNear = 1.0
+zFar = 1000.0
+
 projection :: [GL.GLfloat]
-projection = [ 1.42815, 0.0,     0.0,       0.0
-             , 0.0,     1.42815, 0.0,       0.0
-             , 0.0,     0.0,     1.001001, -1.0
-             , 0.0,     0.0,     1.001001,  1.0
+projection = [ s,   0.0, 0.0,                       0.0
+             , 0.0, s,   0.0,                       0.0
+             , 0.0, 0.0, -(zFar / zRange),         -1.0
+             , 0.0, 0.0, -(zFar * zNear / zRange),  1.0
              ]
+  where s = recip (tan (fov * 0.5 * pi / 180.0))
+        zRange = zFar - zNear
 
 startup :: ListenerF ()
 startup _ _ = setupWindow viewport title >>= \case
