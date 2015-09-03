@@ -6,7 +6,8 @@ import Data.List (intercalate)
 import Data.Function.Apply
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as M
-import Control.Monad.State (unless, liftIO)
+import Control.Monad.State (liftIO)
+import Control.Monad.Truthful
 import Control.Lens ((^.), _1)
 import System.IO (stderr, hPutStrLn)
 import Foreign (nullPtr, sizeOf, withArray)
@@ -70,10 +71,9 @@ shutdown win _ _ = liftIO (destroyWindow win)
 gl :: IO a -> PolarIO a
 gl action = do
     result <- liftIO action
-    liftIO (GL.get GL.errors) >>= unlessEmpty `apply` \xs -> notify "error" (intercalate "\n" (showGLError <$> xs))
+    liftIO (GL.get GL.errors) >>= whenTruthful1 (notify "error" . intercalate "\n" . fmap showGLError)
     return result
   where showGLError (GL.Error category message) = show category ++ " (" ++ message ++ ")"
-        unlessEmpty f xs = unless (null xs) (f xs)
 
 setupDrawable :: [GL.GLfloat] -> PolarIO Drawable
 setupDrawable vertices = do
@@ -91,10 +91,7 @@ makeShader contents shaderType = do
     shader <- gl (GL.createShader shaderType)
     gl (GL.shaderSourceBS shader $= BS.pack contents)
     gl (GL.compileShader shader)
-    status <- gl $ GL.get (GL.compileStatus shader)
-    unless status $ do
-        infoLog <- gl $ GL.get (GL.shaderInfoLog shader)
-        notify "error" infoLog
+    gl (GL.get (GL.compileStatus shader)) >>= unlessTruthful (gl (GL.get $ GL.shaderInfoLog shader) >>= notify "error")
     return shader
 
 makeProgram :: [GL.Shader] -> PolarIO GL.Program
@@ -102,10 +99,7 @@ makeProgram shaders = do
     program <- gl GL.createProgram
     gl (GL.attachedShaders program $= shaders)
     gl (GL.linkProgram program)
-    status <- gl $ GL.get (GL.linkStatus program)
-    unless status $ do
-        infoLog <- gl $ GL.get (GL.programInfoLog program)
-        notify "error" infoLog
+    gl (GL.get (GL.linkStatus program)) >>= unlessTruthful (gl (GL.get $ GL.programInfoLog program) >>= notify "error")
     return program
 
 setupShader :: PolarIO (Maybe GL.Program)
@@ -125,7 +119,7 @@ setupShader = f <$> liftIO (readFile "main.shader") >>= \case
 setupWindow :: Box Int -> String -> PolarIO (Maybe GLFW.Window)
 setupWindow (Box origin size) title = do
     liftIO $ GLFW.setErrorCallback (Just errorCB)
-    liftIO GLFW.init >>= \succeeded -> unless succeeded `apply` notify "error" "failed to init GLFW"
+    liftIO GLFW.init >>= unlessTruthful (notify "error" "failed to init GLFW")
     liftIO $ do
         GLFW.windowHint (GLFW.WindowHint'ContextVersionMajor 3)
         GLFW.windowHint (GLFW.WindowHint'ContextVersionMinor 2)
