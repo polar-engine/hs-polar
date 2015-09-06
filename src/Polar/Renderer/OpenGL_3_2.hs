@@ -24,7 +24,7 @@ import Polar.Shader.Compiler.GLSL150 (GLSL150(..))
 
 type Drawable = (Int, GL.VertexArrayObject, GL.BufferObject)
 
-projection :: (Num a, Floating a) => a -> a -> a -> [a]
+projection :: Floating a => a -> a -> a -> [a]
 projection fov zNear zFar = [ s,   0.0, 0.0,                       0.0
                             , 0.0, s,   0.0,                       0.0
                             , 0.0, 0.0, -(zFar / zRange),         -1.0
