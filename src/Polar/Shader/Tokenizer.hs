@@ -20,6 +20,7 @@ isLiteralChar _ = False
 
 tokenize :: String -> Either String [Token]
 tokenize [] = return []
+tokenize (':':'=':xs) = (LetT :) <$> tokenize xs
 tokenize ('=':xs) = (EqualsT :) <$> tokenize xs
 tokenize ('+':xs) = (PlusT :) <$> tokenize xs
 tokenize ('*':xs) = (AsteriskT :) <$> tokenize xs

@@ -1,10 +1,16 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Polar.Shader.Types where
 
 import qualified Data.Map as M
+import Control.Lens.TH (makeFields)
 
-data Token = EqualsT
+data Token = LetT
+           | EqualsT
            | PlusT
            | AsteriskT
            | NewLineT
@@ -17,13 +23,15 @@ data Token = EqualsT
            | LiteralT Double
              deriving (Eq, Show)
 
-data AST = Assignment AST AST
+data AST = Let String AST
+         | Assignment AST AST
          | Additive AST AST
          | Multiplicative AST AST
          | Swizzle [AST]
          | Literal Double
          | Identifier String
          | NamePosition
+         | NameVar String DataType
          | NameGlobal String DataType
          | NameInput String DataType
          | NameOutput String DataType
@@ -32,12 +40,20 @@ data AST = Assignment AST AST
 data ShaderType = ShaderVertex | ShaderPixel
 data DataType = DataFloat | DataFloat2 | DataFloat4 | DataMatrix4x4 deriving (Eq, Show)
 
+data Function = Function
+    { _functionName :: String
+    , _functionLets :: [(String, DataType)]
+    , _functionAsts :: [AST]
+    } deriving (Eq, Show)
+makeFields ''Function
+
 data CompilerEnv = CompilerEnv
-    { compilerFunctions :: M.Map String [AST]
-    , compilerGlobals   :: M.Map String DataType
-    , compilerInputs    :: M.Map String DataType
-    , compilerOutputs   :: M.Map String DataType
+    { _compilerEnvFunctions :: M.Map String Function
+    , _compilerEnvGlobals   :: M.Map String DataType
+    , _compilerEnvInputs    :: M.Map String DataType
+    , _compilerEnvOutputs   :: M.Map String DataType
     }
+makeFields ''CompilerEnv
 
 class Compiler a where generate :: CompilerEnv -> a -> Either String (String, String)
 class HasComponents a where numComponents :: a -> Either String Int
@@ -49,6 +65,7 @@ instance HasComponents DataType where
     numComponents DataMatrix4x4 = return 16
 
 instance HasComponents AST where
+    numComponents (Let _ right) = numComponents right
     numComponents (Assignment left right) = do
         l <- numComponents left
         (l ==) <$> numComponents right >>= \case
@@ -71,10 +88,11 @@ instance HasComponents AST where
     numComponents (Swizzle (ast : asts)) = (+) <$> numComponents ast <*> numComponents (Swizzle asts)
     numComponents (Literal _) = return 1
     numComponents NamePosition = return 4
+    numComponents (NameVar _ ty) = numComponents ty
     numComponents (NameGlobal _ ty) = numComponents ty
     numComponents (NameInput _ ty) = numComponents ty
     numComponents (NameOutput _ ty) = numComponents ty
-    numComponents (Identifier name) = Left ("unresolved identifier (" ++ name ++ ")")
+    numComponents (Identifier name) = Left ("numComponents: unresolved identifier (" ++ name ++ ")")
 
 astType :: AST -> Either String DataType
 astType ast = numComponents ast >>= \case

@@ -1,7 +1,10 @@
 vertex {
-	position = projection * vertex -10 1
+	newPos := vertex -10 1
+	position = projection * newPos
 }
 
 pixel {
-	color = 1 0 0 1
+	one := 1
+	zerozero := 0 0
+	color = one zerozero 1
 }

@@ -3,22 +3,23 @@
 module Polar.Shader.Parser where
 
 import qualified Data.Map as M
+import Control.Lens ((^.))
 import Polar.Shader.Types
 
-
-parse :: [Token] -> Either String (M.Map String [AST])
+parse :: [Token] -> Either String (M.Map String Function)
 parse [] = return M.empty
 parse (NewLineT : ts) = parse ts
 parse ts = do
-    (name, asts, rest) <- parseFunction ts
-    M.insertWith (flip const) name asts <$> parse rest
-parseFunction :: [Token] -> Either String (String, [AST], [Token])
+    (fn, rest) <- parseFunction ts
+    M.insertWith (flip const) (fn ^. name) fn <$> parse rest
+
+parseFunction :: [Token] -> Either String (Function, [Token])
 parseFunction [] = Left "unexpected end of stream"
 parseFunction (IdentifierT name : BraceOpenT : ts)
     | null rest = Left "unexpected end of stream"
     | otherwise = do
         (asts, []) <- parseStatements contents
-        return (name, asts, tail rest)
+        return (Function name [] asts, tail rest)
   where (contents, rest) = break (== BraceCloseT) ts
 parseFunction (t : NewLineT : ts) = parseFunction (t : ts)
 parseFunction (t : _) = Left ("unexpected token (" ++ show t ++ ")")
@@ -28,9 +29,18 @@ parseStatements [] = return ([], [])
 parseStatements (StatementEndT : ts) = parseStatements ts
 parseStatements (NewLineT : ts) = parseStatements ts
 parseStatements ts = do
-    (ast, ts') <- parseAST ts
+    (ast, ts') <- parseStatement ts
     (asts, rest) <- parseStatements ts'
     return (ast : asts, rest)
+
+parseStatement :: [Token] -> Either String (AST, [Token])
+parseStatement = parseLet
+
+parseLet :: [Token] -> Either String (AST, [Token])
+parseLet ts@(IdentifierT name : LetT : ts') = case parseAssignment ts' of
+    Right (right, rest)         -> return (Let name right, rest)
+    _                           -> parseAssignment ts
+parseLet ts = parseAssignment ts
 
 parseAST :: [Token] -> Either String (AST, [Token])
 parseAST = parseAssignment
