@@ -24,35 +24,28 @@ import Polar.Shader.Compiler.GLSL150 (GLSL150(..))
 
 type Drawable = (Int, GL.VertexArrayObject, GL.BufferObject)
 
-fov = 70.0
-zNear = 1.0
-zFar = 1000.0
-
-projection :: [GL.GLfloat]
-projection = [ s,   0.0, 0.0,                       0.0
-             , 0.0, s,   0.0,                       0.0
-             , 0.0, 0.0, -(zFar / zRange),         -1.0
-             , 0.0, 0.0, -(zFar * zNear / zRange),  1.0
-             ]
+projection :: (Num a, Floating a) => a -> a -> a -> [a]
+projection fov zNear zFar = [ s,   0.0, 0.0,                       0.0
+                            , 0.0, s,   0.0,                       0.0
+                            , 0.0, 0.0, -(zFar / zRange),         -1.0
+                            , 0.0, 0.0, -(zFar * zNear / zRange),  1.0
+                            ]
   where s = recip (tan (fov * 0.5 * pi / 180.0))
         zRange = zFar - zNear
 
 startup :: ListenerF ()
-startup _ _ = setupWindow viewport title >>= \case
-    Nothing  -> return ()
-    Just win -> setupShader >>= \case
-        Nothing      -> return ()
-        Just program -> do
-            (GL.UniformLocation loc) <- gl (GL.uniformLocation program "u_projection")
-            gl $ withArray projection $ \buffer -> GL.glUniformMatrix4fv loc 1 0 buffer
-            drawable <- setupDrawable [ -1, -1
-                                      ,  1, -1
-                                      ,  0,  1
-                                      ]
-            gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
-            gl (GL.clearColor $= GL.Color4 0 0 0 0)
-            listen "tick" (Listener (render win drawable))
-            listen "shutdown" (Listener (shutdown win))
+startup _ _ = setupWindow viewport title >>= whenTruthful1 `apply` \(Just win) -> do
+    setupShader >>= whenTruthful1 `apply` \(Just program) -> do
+        (GL.UniformLocation loc) <- gl (GL.uniformLocation program "u_projection")
+        gl $ withArray (projection 70 1 1000) $ \buffer -> GL.glUniformMatrix4fv loc 1 0 buffer
+        drawable <- setupDrawable [ -1, -1
+                                  ,  1, -1
+                                  ,  0,  1
+                                  ]
+        gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
+        gl (GL.clearColor $= GL.Color4 0 0 0 0)
+        listen "tick" (Listener (render win drawable))
+        listen "shutdown" (Listener (shutdown win))
   where viewport = Box (Point 50 50 0 0) (Point 640 360 0 0)
         title = "Game"
 
