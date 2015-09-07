@@ -33,7 +33,7 @@ library
   other-modules:       Data.Truthful,
                        Control.Monad.Truthful
   build-depends:       base >=4.8 && <5, mtl >=2.2, containers >=0.5.5, OpenGL >=2.12, OpenGLRaw >2.1, GLFW-b >=1.4.7, transformers >=0.4.2, bytestring >=0.10, lens >=4.12,
-                       polar-shader >=0.1 && <0.2
+                       tight-apply >=0.1 && <0.2, polar-shader >=0.1 && <0.2
   hs-source-dirs:      src
   ghc-options:         -W
   ghc-prof-options:    -fprof-auto-calls
