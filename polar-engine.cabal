@@ -1,15 +1,19 @@
-name:                polar
+name:                polar-engine
 version:             0.1.0.0
--- synopsis:            
--- description:         
+synopsis:            Polar Game Engine
+description:         Polar Game Engine
 license:             Apache-2.0
 license-file:        LICENSE
 author:              David Farrell
-maintainer:          shokku.ra@gmail.com
-copyright:           (c) 2014-2015 David Farrell
--- category:            
+maintainer:          David Farrell <shokku.ra@gmail.com>
+copyright:           Copyright (C) 2014-2015 David Farrell
+category:            Game Engine
 build-type:          Simple
 cabal-version:       >=1.9.2
+
+source-repository head
+  type:                git
+  location:            https://github.com/polar-engine/polar.git
 
 library
   exposed-modules:     Polar,
@@ -20,11 +24,6 @@ library
                        Polar.Types.Key,
                        Polar.Types.Engine,
                        Polar.Types.Lenses,
-                       Polar.Shader,
-                       Polar.Shader.Types,
-                       Polar.Shader.Tokenizer,
-                       Polar.Shader.Parser,
-                       Polar.Shader.Processor
                        Polar.Shader.Compiler.GLSL150,
                        Polar.Engine,
                        Polar.Control,
@@ -33,21 +32,15 @@ library
                        Polar.Renderer.OpenGL_3_2
   other-modules:       Data.Truthful,
                        Control.Monad.Truthful
-  build-depends:       base >=4.8 && <5, mtl >=2.2, containers >=0.5.5, OpenGL >=2.12, OpenGLRaw >2.1, GLFW-b >=1.4.7, transformers >=0.4.2, bytestring >=0.10, lens >=4.12
-  hs-source-dirs:      lib/polar/src
+  build-depends:       base >=4.8 && <5, mtl >=2.2, containers >=0.5.5, OpenGL >=2.12, OpenGLRaw >2.1, GLFW-b >=1.4.7, transformers >=0.4.2, bytestring >=0.10, lens >=4.12,
+                       polar-shader >=0.1 && <0.2
+  hs-source-dirs:      lib/polar-engine/src
   ghc-options:         -W
   ghc-prof-options:    -fprof-auto-calls
 
 executable polar
   main-is:             Main.hs
-  build-depends:       base >=4.8 && <5, lens >=4.12, polar
+  build-depends:       base >=4.8 && <5, lens >=4.12, polar-engine
   hs-source-dirs:      src
   ghc-options:         -W
   ghc-prof-options:    -fprof-auto-calls
-
-test-suite test-polar
-  type:                exitcode-stdio-1.0
-  main-is:             Spec.hs
-  build-depends:       base >=4.8 && <5, containers >=0.5.5, hspec >=2.1, polar
-  hs-source-dirs:      test
-  ghc-options:         -W
