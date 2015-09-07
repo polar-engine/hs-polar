@@ -1,4 +1,4 @@
-polar4 [![Build Status](https://travis-ci.org/shockkolate/polar4.svg?branch=master)](https://travis-ci.org/shockkolate/polar4)
+polar [![Build Status](https://travis-ci.org/shockkolate/polar.svg?branch=master)](https://travis-ci.org/shockkolate/polar)
 ======
 
-Polar Game Engine 4
+Polar Game Engine

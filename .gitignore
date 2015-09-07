@@ -5,5 +5,3 @@
 .cabal-sandbox
 cabal.sandbox.config
 dist
-polar4
-polar4.exe
