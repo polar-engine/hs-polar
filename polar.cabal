@@ -13,18 +13,34 @@ cabal-version:       >=1.9.2
 
 library
   exposed-modules:     Polar,
+                       Polar.Types,
+                       Polar.Types.Point,
+                       Polar.Types.Box,
+                       Polar.Types.Color,
+                       Polar.Types.Key,
+                       Polar.Types.Engine,
+                       Polar.Types.Lenses,
+                       Polar.Shader,
                        Polar.Shader.Types,
                        Polar.Shader.Tokenizer,
                        Polar.Shader.Parser,
                        Polar.Shader.Processor
+                       Polar.Shader.Compiler.GLSL150,
+                       Polar.Engine,
+                       Polar.Control,
+                       Polar.Listener,
+                       Polar.Logger,
+                       Polar.Renderer.OpenGL_3_2
+  other-modules:       Data.Truthful,
+                       Control.Monad.Truthful
   build-depends:       base >=4.7, mtl >=2.2, containers >=0.5.5, OpenGL >=2.12, OpenGLRaw >2.1, GLFW-b >=1.4.7, transformers >=0.4.2, bytestring >=0.10, lens >=4.12
-  hs-source-dirs:      src
+  hs-source-dirs:      lib/polar/src
   ghc-options:         -W
   ghc-prof-options:    -fprof-auto-calls
 
 executable polar
   main-is:             Main.hs
-  build-depends:       base >=4.7, mtl >=2.2, containers >=0.5.5, OpenGL >=2.12, OpenGLRaw >2.1, GLFW-b >=1.4.7, transformers >=0.4.2, bytestring >=0.10, lens >=4.12
+  build-depends:       base >=4.7, lens >=4.12, polar
   hs-source-dirs:      src
   ghc-options:         -W
   ghc-prof-options:    -fprof-auto-calls
@@ -32,7 +48,6 @@ executable polar
 test-suite test-polar
   type:                exitcode-stdio-1.0
   main-is:             Spec.hs
-  build-depends:       base >=4.7, containers >=0.5.5,
-                       hspec >=2.1, polar
+  build-depends:       base >=4.7, containers >=0.5.5, hspec >=2.1, polar
   hs-source-dirs:      test
   ghc-options:         -W
