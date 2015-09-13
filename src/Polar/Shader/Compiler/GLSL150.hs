@@ -14,9 +14,6 @@ instance Compiler GLSL150 where generate env _ = (\(_, _, w) -> w) <$> runRWST w
 
 type ShaderM = RWST CompilerEnv (String, String) ShaderType (Either String)
 
-unrecognized :: String -> ShaderM a
-unrecognized name = lift $ Left ("unrecognized name (" ++ name ++ ")")
-
 tellCurrent :: String -> ShaderM ()
 tellCurrent msg = get >>= \case
     ShaderVertex -> tell (msg, "")
@@ -66,7 +63,7 @@ writeAST (NameOutput name _) = tellCurrent ("o_" ++ name)
 
 writeFunction :: String -> Maybe String -> ShaderM ()
 writeFunction name mActualName = view (functions . at name) >>= \case
-    Nothing -> unrecognized name
+    Nothing -> lift $ Left ("unrecognized name (" ++ name ++ ")")
     Just fn -> do
         tellCurrent ("void " ++ fromMaybe name mActualName ++ "(){")
         sequence (tellCurrent ";" `intersperse` map writeAST (fn ^. asts))
