@@ -5,7 +5,7 @@
   Copyright   : (c) 2015 David Farrell
   License     : Apache-2.0
   Stability   : unstable
-  Portability : portable
+  Portability : non-portable (GHC.Stack)
 
   This module exposes a startup event listener which adds an error listener to log all errors to 'stderr'.
 -}
