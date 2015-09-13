@@ -12,7 +12,7 @@
 
 module Polar.Engine where
 
-import Control.Monad.Truthful (whenTruthful)
+import Control.Monad.Truthful (unlessTruthful)
 import Control.Lens (use)
 import Polar.Types
 import Polar.Listener
@@ -27,4 +27,4 @@ run = do
 
 -- |Run the engine loop until an exit is requested.
 loop :: PolarIO ()
-loop = use willExit >>= whenTruthful (notify "tick" () >> loop)
+loop = use willExit >>= unlessTruthful (notify "tick" () >> loop)
