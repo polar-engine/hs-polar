@@ -6,7 +6,7 @@
   Copyright   : (c) 2015 David Farrell
   License     : Apache-2.0
   Stability   : unstable
-  Portability : non-portable (GHC Extensions)
+  Portability : non-portable (GHC extensions)
 
   Helper functions to perform common operations on engine event listeners.
 -}
