@@ -9,7 +9,7 @@ maintainer:          David Farrell <shokku.ra@gmail.com>
 copyright:           Copyright (C) 2014-2015 David Farrell
 category:            Game Engine
 build-type:          Simple
-cabal-version:       >=1.9.2
+cabal-version:       >=1.10
 
 source-repository head
   type:                git
@@ -32,6 +32,7 @@ library
                        Polar.Renderer.OpenGL_3_2
   build-depends:       base >=4.8 && <5, mtl >=2.2, containers >=0.5.5, OpenGL >=2.12, OpenGLRaw >2.1, GLFW-b >=1.4.7, transformers >=0.4.2, bytestring >=0.10, lens >=4.12,
                        tight-apply >=0.1 && <0.2, truthful >=0.1 && <0.2, polar-shader >=0.1 && <0.2
+  default-language:    Haskell2010
   hs-source-dirs:      src
   ghc-options:         -W
   ghc-prof-options:    -fprof-auto-calls
@@ -39,6 +40,7 @@ library
 executable basic
   main-is:             Main.hs
   build-depends:       base >=4.8 && <5, lens >=4.12, polar-engine
+  default-language:    Haskell2010
   hs-source-dirs:      examples/basic
   ghc-options:         -W
   ghc-prof-options:    -fprof-auto-calls
