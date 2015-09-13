@@ -1,7 +1,17 @@
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE LambdaCase #-}
 
-module Polar.Renderer.OpenGL_3_2 where
+{-|
+  Module      : Polar.Render.OpenGL_3_2
+  Copyright   : (c) 2015 David Farrell
+  License     : Apache-2.0
+  Stability   : unstable
+  Portability : non-portable (GHC extensions)
+
+  This module exposes an OpenGL 3.2 renderer as a startup event listener.
+-}
+
+module Polar.Renderer.OpenGL_3_2 (startup) where
 
 import Data.List (intercalate)
 import Data.Function.Apply
@@ -16,24 +26,14 @@ import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 import qualified Graphics.Rendering.OpenGL.Raw as GL
 import qualified Graphics.UI.GLFW as GLFW
-import Polar.Types
+import Polar.Types hiding (startup)
 import Polar.Control
 import Polar.Listener
 import Polar.Shader (compile)
 import Polar.Shader.Types (DataType(..))
 import Polar.Shader.Compiler.GLSL150 (GLSL150(..))
 
-type Drawable = (Int, GL.VertexArrayObject, GL.BufferObject)
-
-projection :: Floating a => a -> a -> a -> [a]
-projection fov zNear zFar = [ s,   0.0, 0.0,                       0.0
-                            , 0.0, s,   0.0,                       0.0
-                            , 0.0, 0.0, -(zFar / zRange),         -1.0
-                            , 0.0, 0.0, -(zFar * zNear / zRange),  1.0
-                            ]
-  where s = recip (tan (fov * 0.5 * pi / 180.0))
-        zRange = zFar - zNear
-
+-- |Startup event listener.
 startup :: ListenerF ()
 startup _ _ = setupWindow viewport title >>= whenTruthful1 `apply` \(Just win) -> do
     setupShader >>= whenTruthful1 `apply` \(Just program) -> do
@@ -49,6 +49,17 @@ startup _ _ = setupWindow viewport title >>= whenTruthful1 `apply` \(Just win) -
         listen "shutdown" (Listener (shutdown win))
   where viewport = Box (Point 50 50 0 0) (Point 640 360 0 0)
         title = "Game"
+
+type Drawable = (Int, GL.VertexArrayObject, GL.BufferObject)
+
+projection :: Floating a => a -> a -> a -> [a]
+projection fov zNear zFar = [ s,   0.0, 0.0,                       0.0
+                            , 0.0, s,   0.0,                       0.0
+                            , 0.0, 0.0, -(zFar / zRange),         -1.0
+                            , 0.0, 0.0, -(zFar * zNear / zRange),  1.0
+                            ]
+  where s = recip (tan (fov * 0.5 * pi / 180.0))
+        zRange = zFar - zNear
 
 render :: GLFW.Window -> Drawable -> ListenerF ()
 render win drawable _ _ = liftIO (GLFW.windowShouldClose win) >>= \case
