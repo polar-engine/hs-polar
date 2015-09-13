@@ -1,20 +1,32 @@
 {-# LANGUAGE Safe #-}
 
-module Polar.Logger where
+{-|
+  Module      : Polar.Logger
+  Copyright   : (c) 2015 David Farrell
+  License     : Apache-2.0
+  Stability   : unstable
+  Portability : portable
+
+  This module exposes a startup event listener which adds an error listener to log all errors to 'stderr'.
+-}
+
+module Polar.Logger (startup) where
 
 import Control.Monad.State (liftIO)
 import System.IO (BufferMode(..), stdout, stderr, hPutStrLn, hSetBuffering)
 import GHC.Stack (currentCallStack, renderStack)
-import Polar.Types
+import Polar.Types hiding (startup)
 import Polar.Listener
 import Polar.Control
 
+-- |Startup event listener.
 startup :: ListenerF ()
 startup _ _ = do
     liftIO (hSetBuffering stdout NoBuffering)
     liftIO (hSetBuffering stderr LineBuffering)
     listen "error" (Listener onError)
 
+-- |Error event listener.
 onError :: ListenerF String
 onError _ err = do
     stk <- liftIO currentCallStack
