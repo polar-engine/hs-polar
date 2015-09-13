@@ -2,7 +2,7 @@
 {-# LANGUAGE LambdaCase #-}
 
 {-|
-  Module      : Polar.Render.OpenGL_3_2
+  Module      : Polar.Renderer.OpenGL_3_2
   Copyright   : (c) 2015 David Farrell
   License     : Apache-2.0
   Stability   : unstable
