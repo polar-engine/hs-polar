@@ -1,3 +1,5 @@
+{-# LANGUAGE Safe #-}
+
 module Polar.Control where
 
 import Control.Lens ((.=))

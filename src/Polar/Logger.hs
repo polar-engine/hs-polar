@@ -1,3 +1,5 @@
+{-# LANGUAGE Safe #-}
+
 module Polar.Logger where
 
 import Control.Monad.State (liftIO)

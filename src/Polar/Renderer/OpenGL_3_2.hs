@@ -1,3 +1,4 @@
+{-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE LambdaCase #-}
 
 module Polar.Renderer.OpenGL_3_2 where

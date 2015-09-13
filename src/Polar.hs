@@ -1,3 +1,5 @@
+{-# LANGUAGE Safe #-}
+
 module Polar (run, runDefault) where
 
 import Control.Monad.State (evalStateT)
