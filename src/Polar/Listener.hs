@@ -2,6 +2,8 @@
 
 {-|
   Module      : Polar.Listener
+  Copyright   : (c) 2015 David Farrell
+  License     : Apache-2.0
   Stability   : unstable
   Portability : non-portable (GHC Extensions)
 
