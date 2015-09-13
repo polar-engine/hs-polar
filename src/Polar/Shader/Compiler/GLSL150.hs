@@ -1,7 +1,17 @@
 {-# LANGUAGE Safe #-}
 {-# LANGUAGE LambdaCase #-}
 
-module Polar.Shader.Compiler.GLSL150 where
+{-|
+  Module      : Polar.Shader.Compiler.GLSL150
+  Copyright   : (c) 2015 David Farrell
+  License     : Apache-2.0
+  Stability   : unstable
+  Portability : non-portable (GHC extensions)
+
+  This module exposes a GLSL 1.50 'Compiler'
+-}
+
+module Polar.Shader.Compiler.GLSL150 (GLSL150(..)) where
 
 import Data.Maybe (fromMaybe)
 import Data.List (intersperse)
@@ -10,6 +20,7 @@ import Control.Monad.RWS (RWST, tell, get, put, lift, runRWST)
 import Control.Lens ((^.), view, at)
 import Polar.Shader.Types
 
+-- |GLSL 1.50 shader compiler
 data GLSL150 = GLSL150
 instance Compiler GLSL150 where generate env _ = (\(_, _, w) -> w) <$> runRWST writeShaders env ShaderVertex
 
