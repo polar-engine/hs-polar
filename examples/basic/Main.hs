@@ -1,3 +1,5 @@
+{-# LANGUAGE Safe #-}
+
 module Main where
 
 import Control.Lens ((.~))
