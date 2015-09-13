@@ -1,3 +1,5 @@
+{-# LANGUAGE Safe #-}
+
 module Polar.Types
 ( module Polar.Types.Point
 , module Polar.Types.Box

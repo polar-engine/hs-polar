@@ -1,3 +1,5 @@
+{-# LANGUAGE Safe #-}
+
 module Polar.Types.Color where
 
 data Color = Color3 Double Double Double

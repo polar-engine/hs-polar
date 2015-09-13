@@ -1,3 +1,4 @@
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE ExistentialQuantification #-}
 
