@@ -19,16 +19,16 @@ tellCurrent msg = get >>= \case
     ShaderVertex -> tell (msg, "")
     ShaderPixel  -> tell ("", msg)
 
-showType :: DataType -> String
-showType DataFloat     = "float"
-showType DataFloat2    = "vec2"
-showType DataFloat4    = "vec4"
-showType DataMatrix4x4 = "mat4x4"
+showDataType :: DataType -> String
+showDataType DataFloat     = "float"
+showDataType DataFloat2    = "vec2"
+showDataType DataFloat4    = "vec4"
+showDataType DataMatrix4x4 = "mat4x4"
 
 writeAST :: AST -> ShaderM ()
 writeAST (Let name right) = do
     ty <- lift (astType right)
-    tellCurrent (showType ty ++ " v_" ++ name ++ "=")
+    tellCurrent (showDataType ty ++ " v_" ++ name ++ "=")
     writeAST right
 writeAST (Assignment lhs rhs) = do
     tellCurrent "("
@@ -50,7 +50,7 @@ writeAST (Multiplicative lhs rhs) = do
     tellCurrent ")"
 writeAST ast@(Swizzle asts) = do
     ty <- lift (astType ast)
-    tellCurrent ("(" ++ showType ty ++ "(")
+    tellCurrent ("(" ++ showDataType ty ++ "(")
     sequence (tellCurrent "," `intersperse` map writeAST asts)
     tellCurrent "))"
 writeAST (Literal literal) = tellCurrent (show literal)
@@ -72,7 +72,7 @@ writeFunction name mActualName = view (functions . at name) >>= \case
 writeLocatables :: Bool -> String -> String -> Int -> [(String, DataType)] -> ShaderM ()
 writeLocatables _ _ _ _ [] = return ()
 writeLocatables explicit qualifier prefix n ((name, ty):xs) = do
-    tellCurrent $ layout ++ qualifier ++ " " ++ showType ty ++ ' ' : prefix ++ name ++ ";"
+    tellCurrent $ layout ++ qualifier ++ " " ++ showDataType ty ++ ' ' : prefix ++ name ++ ";"
     writeLocatables explicit qualifier prefix (succ n) xs
   where layout = if explicit then "layout(location=" ++ show n ++ ")" else ""
 
