@@ -40,6 +40,6 @@ data KeyModifiers = KeyModifiers
     , superModifier :: Bool
     }
 
--- |Default value for 'KeyModifiers'
+-- |Default value for 'KeyModifiers'.
 defaultKeyModifiers :: KeyModifiers
 defaultKeyModifiers = KeyModifiers False False False False
