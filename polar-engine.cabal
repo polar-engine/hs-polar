@@ -37,7 +37,8 @@ library
   ghc-options:         -W
   ghc-prof-options:    -fprof-auto-calls
 
-executable basic
+test-suite example-basic
+  type:                exitcode-stdio-1.0
   main-is:             Main.hs
   build-depends:       base >=4.8 && <5, lens >=4.12, polar-engine
   default-language:    Haskell2010
