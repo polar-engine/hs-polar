@@ -23,13 +23,13 @@ data Point a = Point { _pointX :: a -- ^ x component
 
 -- |Map numeric operations over all components.
 instance Num a => Num (Point a) where
-    p1 + p2 = foldr (+) (fromInteger 0) [p1, p2]
-    p1 * p2 = foldr (*) (fromInteger 0) [p1, p2]
-    p1 - p2 = foldl (-) (fromInteger 0) [p1, p2]
-    negate = fmap negate
+    (Point x1 y1 z1 w1) + (Point x2 y2 z2 w2) = Point (x1 * w1 + x2 * w2) (y1 * w1 + y2 * w2) (z1 * w1 + z2 * w2) 1
+    (Point x1 y1 z1 w1) * (Point x2 y2 z2 w2) = Point (x1 * w1 * x2 * w2) (y1 * w1 * y2 * w2) (z1 * w1 * z2 * w2) 1
+    p1 - p2 = p1 + (negate p2)
+    negate (Point x y z w) = Point x y z (negate w)
     abs = fmap abs
     signum = fmap signum
-    fromInteger x = Point i i i i where i = fromInteger x
+    fromInteger x = let i = fromInteger x in Point i i i 1
 
 -- |Default value for 'Point'.
 defaultPoint :: Num a => Point a
@@ -40,4 +40,4 @@ defaultPoint = fromInteger 0
 magnitude :: RealFloat a
           => Point a -- ^ point
           -> a
-magnitude (Point x y z w) = sqrt (x * x + y * y + z * z + w * w)
+magnitude (Point x y z w) = sqrt (x * x + y * y + z * z) * w
