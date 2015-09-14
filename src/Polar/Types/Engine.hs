@@ -10,7 +10,7 @@ import Control.Monad.State
 import Polar.Types.Point
 import Polar.Types.Box
 
-type MonadPolarState = MonadState Engine
+type MonadPolar = MonadState Engine
 type Polar = State Engine
 type PolarIO = StateT Engine IO
 

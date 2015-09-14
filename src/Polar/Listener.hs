@@ -21,7 +21,7 @@ import Control.Lens ((<>=), use, at)
 import Polar.Types
 
 -- |Insert a listener into the engine.
-listen :: MonadPolarState m
+listen :: MonadPolar m
        => String   -- ^ event name
        -> Listener -- ^ listener
        -> m ()
