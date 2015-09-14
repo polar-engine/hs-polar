@@ -31,7 +31,7 @@ instance Num a => Num (Point a) where
     signum = fmap signum
     fromInteger x = Point i i i i where i = fromInteger x
 
--- |Default value for 'Point'
+-- |Default value for 'Point'.
 defaultPoint :: Num a => Point a
 defaultPoint = fromInteger 0
 
