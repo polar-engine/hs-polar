@@ -36,8 +36,7 @@ type Listener a = String -> a -> PolarIO ()
 data ExListener = forall a. Typeable a => ExListener (Listener a)
 
 -- |Engine state environment.
-data Engine = Engine { _engineTitle     :: String
-                     , _engineStartup   :: [ExListener]
+data Engine = Engine { _engineStartup   :: [ExListener]
                      , _engineListeners :: M.Map String [ExListener]
                      , _engineWillExit  :: Bool
                      , _engineViewport  :: Box Int
@@ -46,8 +45,7 @@ data Engine = Engine { _engineTitle     :: String
 -- |Default value for 'Engine'.
 defaultEngine :: Engine
 defaultEngine = Engine
-    { _engineTitle     = "Polar Engine 4"
-    , _engineStartup   = []
+    { _engineStartup   = []
     , _engineListeners = M.empty
     , _engineWillExit  = False
     , _engineViewport  = Box (defaultPoint) (Point 1280 720 0 0)
