@@ -10,11 +10,15 @@
   Helper functions to control the functioning of the engine.
 -}
 
-module Polar.Control (exit) where
+module Polar.Control (io, exit) where
 
-import Control.Lens ((.=))
+import Control.Lens ((.=), (%=))
 import Polar.Types
 
+-- |Schedule IO to be performed after the current tick.
+io :: PolarT IO () -> Polar ()
+io action = deferredIO %= (action :)
+
 -- |Exit out of the engine after the current tick.
-exit :: PolarIO ()
+exit :: Polar ()
 exit = willExit .= True

@@ -31,7 +31,7 @@ listen note listener = listeners . at note <>= Just [listener]
 notify :: Typeable a
        => String -- ^ event name
        -> a      -- ^ argument
-       -> PolarIO ()
+       -> Polar ()
 notify = notify' 1
 
 -- |Dispatch an event to all listeners with a maximum error notification depth.
@@ -39,7 +39,7 @@ notify' :: Typeable a
         => Int    -- ^ maximum error notification depth
         -> String -- ^ event name
         -> a      -- ^ argument
-        -> PolarIO ()
+        -> Polar ()
 notify' n note x = use (listeners . at note) >>= mapM_ notifyOne . fromMaybe []
   where notifyOne (ExListener f) = case fromDynamic (toDyn f) of
             Nothing -> when (n > 0) $ notify' (pred n) "error" ("type mismatch in " ++ show note)

@@ -35,7 +35,7 @@ import Polar.Shader.Compiler.GLSL150 (GLSL150(..))
 
 -- |Startup event listener.
 startup :: Listener ()
-startup _ _ = setupWindow viewport title >>= whenTruthful1 `apply` \(Just win) -> do
+startup _ _ = io $ setupWindow viewport title >>= whenTruthful1 `apply` \(Just win) -> do
     setupShader >>= whenTruthful1 `apply` \(Just program) -> do
         (GL.UniformLocation loc) <- gl (GL.uniformLocation program "u_projection")
         gl $ withArray (projection 70 1 1000) $ \buffer -> GL.glUniformMatrix4fv loc 1 0 buffer
@@ -62,8 +62,8 @@ projection fov zNear zFar = [ s,   0.0, 0.0,                       0.0
         zRange = zFar - zNear
 
 render :: GLFW.Window -> Drawable -> Listener ()
-render win drawable _ _ = liftIO (GLFW.windowShouldClose win) >>= \case
-    True  -> exit
+render win drawable _ _ = io $ liftIO (GLFW.windowShouldClose win) >>= \case
+    True  -> hoistState exit
     False -> do
         gl $ GL.clear [GL.ColorBuffer, GL.DepthBuffer]
         gl $ GL.drawArrays GL.Triangles 0 (fromIntegral (drawable ^. _1))
@@ -71,16 +71,16 @@ render win drawable _ _ = liftIO (GLFW.windowShouldClose win) >>= \case
         liftIO GLFW.pollEvents
 
 shutdown :: GLFW.Window -> Listener ()
-shutdown win _ _ = liftIO (destroyWindow win)
+shutdown win _ _ = io $ liftIO (destroyWindow win)
 
-gl :: IO a -> PolarIO a
+gl :: IO a -> PolarT IO a
 gl action = do
     result <- liftIO action
-    liftIO (GL.get GL.errors) >>= whenTruthful1 (notify "error" . intercalate "\n" . fmap showGLError)
+    liftIO (GL.get GL.errors) >>= whenTruthful1 (hoistState . notify "error" . intercalate "\n" . fmap showGLError)
     return result
   where showGLError (GL.Error category message) = show category ++ " (" ++ message ++ ")"
 
-setupDrawable :: [GL.GLfloat] -> PolarIO Drawable
+setupDrawable :: [GL.GLfloat] -> PolarT IO Drawable
 setupDrawable vertices = do
     vao <- gl GL.genObjectName
     gl $ GL.bindVertexArrayObject $= Just vao
@@ -91,25 +91,25 @@ setupDrawable vertices = do
     gl $ GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float 0 nullPtr)
     return (length vertices, vao, vbo)
 
-makeShader :: String -> GL.ShaderType -> PolarIO GL.Shader
+makeShader :: String -> GL.ShaderType -> PolarT IO GL.Shader
 makeShader contents shaderType = do
     shader <- gl (GL.createShader shaderType)
     gl (GL.shaderSourceBS shader $= BS.pack contents)
     gl (GL.compileShader shader)
-    gl (GL.get (GL.compileStatus shader)) >>= unlessTruthful (gl (GL.get $ GL.shaderInfoLog shader) >>= notify "error")
+    gl (GL.get (GL.compileStatus shader)) >>= unlessTruthful (gl (GL.get $ GL.shaderInfoLog shader) >>= hoistState . notify "error")
     return shader
 
-makeProgram :: [GL.Shader] -> PolarIO GL.Program
+makeProgram :: [GL.Shader] -> PolarT IO GL.Program
 makeProgram shaders = do
     program <- gl GL.createProgram
     gl (GL.attachedShaders program $= shaders)
     gl (GL.linkProgram program)
-    gl (GL.get (GL.linkStatus program)) >>= unlessTruthful (gl (GL.get $ GL.programInfoLog program) >>= notify "error")
+    gl (GL.get (GL.linkStatus program)) >>= unlessTruthful (gl (GL.get $ GL.programInfoLog program) >>= hoistState . notify "error")
     return program
 
-setupShader :: PolarIO (Maybe GL.Program)
+setupShader :: PolarT IO (Maybe GL.Program)
 setupShader = f <$> liftIO (readFile "main.shader") >>= \case
-    Left err              -> notify "error" err >> return Nothing
+    Left err              -> hoistState (notify "error" err) >> return Nothing
     Right (vertex, pixel) -> do
         vsh <- makeShader vertex GL.VertexShader
         fsh <- makeShader pixel GL.FragmentShader
@@ -121,10 +121,10 @@ setupShader = f <$> liftIO (readFile "main.shader") >>= \case
             (M.fromList [("vertex", DataFloat2)])
             (M.fromList [("color", DataFloat4)]) GLSL150
 
-setupWindow :: Box Int -> String -> PolarIO (Maybe GLFW.Window)
+setupWindow :: Box Int -> String -> PolarT IO (Maybe GLFW.Window)
 setupWindow (Box origin size) title = do
     liftIO $ GLFW.setErrorCallback (Just errorCB)
-    liftIO GLFW.init >>= unlessTruthful (notify "error" "failed to init GLFW")
+    liftIO GLFW.init >>= unlessTruthful (hoistState $ notify "error" "failed to init GLFW")
     liftIO $ do
         GLFW.windowHint (GLFW.WindowHint'ContextVersionMajor 3)
         GLFW.windowHint (GLFW.WindowHint'ContextVersionMinor 2)
@@ -133,7 +133,7 @@ setupWindow (Box origin size) title = do
     liftIO `apply` GLFW.createWindow (size ^. x) (size ^. y) title Nothing Nothing >>= \case
         Nothing  -> do
             liftIO GLFW.terminate
-            notify "error" "failed to create window"
+            hoistState $ notify "error" "failed to create window"
             return Nothing
         Just win -> do
             liftIO $ GLFW.makeContextCurrent (Just win)
@@ -145,6 +145,6 @@ destroyWindow win = do
     GLFW.destroyWindow win
     GLFW.terminate
 
--- TODO: communicate errors back into PolarIO with a channel
+-- TODO: communicate errors back into Polar with a channel
 errorCB :: GLFW.ErrorCallback
 errorCB _ desc = hPutStrLn stderr desc

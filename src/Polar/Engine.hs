@@ -10,21 +10,28 @@
   This module exposes functions that comprise the main loop of the engine.
 -}
 
-module Polar.Engine where
+module Polar.Engine (run, loop) where
 
+import Data.Function.Apply
 import Control.Monad.Truthful (unlessTruthful)
-import Control.Lens (use)
+import Control.Lens ((.=), use)
 import Polar.Types
 import Polar.Listener
 
--- |Run the engine within the 'PolarIO' monad.
-run :: PolarIO ()
+-- |Run the engine within the 'Polar' monad.
+run :: PolarT IO ()
 run = do
-    use startup >>= mapM_ (listen "startup")
-    notify "startup" ()
+    hoistState $ do
+        use startup >>= mapM_ (listen "startup")
+        notify "startup" ()
     loop
-    notify "shutdown" ()
+    hoistState $ notify "shutdown" ()
 
 -- |Run the engine loop until an exit is requested.
-loop :: PolarIO ()
-loop = use willExit >>= unlessTruthful (notify "tick" () >> loop)
+loop :: PolarT IO ()
+loop = use willExit >>= unlessTruthful `apply` do
+    hoistState $ notify "tick" ()
+    actions <- use deferredIO
+    deferredIO .= []
+    sequence actions
+    loop
