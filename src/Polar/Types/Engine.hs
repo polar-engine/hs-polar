@@ -17,8 +17,6 @@ module Polar.Types.Engine where
 import Data.Typeable (Typeable)
 import qualified Data.Map as M
 import Control.Monad.State
-import Polar.Types.Point
-import Polar.Types.Box
 
 -- |Alias to 'MonadState' 'Engine' for conveneince.
 type MonadPolar = MonadState Engine
@@ -44,7 +42,6 @@ data Engine = Engine { _engineStartup     :: [ExListener]
                      , _engineListeners   :: M.Map String [ExListener]
                      , _engineDeferredIO :: [PolarT IO ()]
                      , _engineWillExit    :: Bool
-                     , _engineViewport    :: Box Int
                      }
 
 -- |Default value for 'Engine'.
@@ -54,5 +51,4 @@ defaultEngine = Engine
     , _engineListeners   = M.empty
     , _engineDeferredIO = []
     , _engineWillExit    = False
-    , _engineViewport    = Box (defaultPoint) (Point 1280 720 0 0)
     }
