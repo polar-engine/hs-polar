@@ -34,7 +34,7 @@ import Polar.Shader.Types (DataType(..))
 import Polar.Shader.Compiler.GLSL150 (GLSL150(..))
 
 -- |Startup event listener.
-startup :: ListenerF ()
+startup :: Listener ()
 startup _ _ = setupWindow viewport title >>= whenTruthful1 `apply` \(Just win) -> do
     setupShader >>= whenTruthful1 `apply` \(Just program) -> do
         (GL.UniformLocation loc) <- gl (GL.uniformLocation program "u_projection")
@@ -45,8 +45,8 @@ startup _ _ = setupWindow viewport title >>= whenTruthful1 `apply` \(Just win) -
                                   ]
         gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
         gl (GL.clearColor $= GL.Color4 0 0 0 0)
-        listen "tick" (Listener (render win drawable))
-        listen "shutdown" (Listener (shutdown win))
+        listen "tick" (ExListener (render win drawable))
+        listen "shutdown" (ExListener (shutdown win))
   where viewport = Box (Point 50 50 0 0) (Point 640 360 0 0)
         title = "Game"
 
@@ -61,7 +61,7 @@ projection fov zNear zFar = [ s,   0.0, 0.0,                       0.0
   where s = recip (tan (fov * 0.5 * pi / 180.0))
         zRange = zFar - zNear
 
-render :: GLFW.Window -> Drawable -> ListenerF ()
+render :: GLFW.Window -> Drawable -> Listener ()
 render win drawable _ _ = liftIO (GLFW.windowShouldClose win) >>= \case
     True  -> exit
     False -> do
@@ -70,7 +70,7 @@ render win drawable _ _ = liftIO (GLFW.windowShouldClose win) >>= \case
         liftIO (GLFW.swapBuffers win)
         liftIO GLFW.pollEvents
 
-shutdown :: GLFW.Window -> ListenerF ()
+shutdown :: GLFW.Window -> Listener ()
 shutdown win _ _ = liftIO (destroyWindow win)
 
 gl :: IO a -> PolarIO a

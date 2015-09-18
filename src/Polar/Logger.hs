@@ -20,14 +20,14 @@ import Polar.Listener
 import Polar.Control
 
 -- |Startup event listener.
-startup :: ListenerF ()
+startup :: Listener ()
 startup _ _ = do
     liftIO (hSetBuffering stdout NoBuffering)
     liftIO (hSetBuffering stderr LineBuffering)
-    listen "error" (Listener onError)
+    listen "error" (ExListener onError)
 
 -- |Error event listener.
-onError :: ListenerF String
+onError :: Listener String
 onError _ err = do
     stk <- liftIO currentCallStack
     liftIO $ hPutStrLn stderr ("[ERROR] " ++ err ++ '\n' : renderStack stk)

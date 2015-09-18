@@ -30,15 +30,15 @@ type Polar = State Engine
 type PolarIO = StateT Engine IO
 
 -- |Event listener function.
-type ListenerF a = String -> a -> PolarIO ()
+type Listener a = String -> a -> PolarIO ()
 
--- |Wrapper around 'ListenerF' existentially quantified by the listener argument type.
-data Listener = forall a. Typeable a => Listener (ListenerF a)
+-- |Wrapper around 'Listener' existentially quantified by the listener argument type.
+data ExListener = forall a. Typeable a => ExListener (Listener a)
 
 -- |Engine state environment.
 data Engine = Engine { _engineTitle     :: String
-                     , _engineStartup   :: [Listener]
-                     , _engineListeners :: M.Map String [Listener]
+                     , _engineStartup   :: [ExListener]
+                     , _engineListeners :: M.Map String [ExListener]
                      , _engineWillExit  :: Bool
                      , _engineViewport  :: Box Int
                      }
