@@ -1,4 +1,5 @@
 {-# LANGUAGE Safe #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 {-|
   Module      : Polar.Control
@@ -16,9 +17,9 @@ import Control.Lens ((.=), (%=))
 import Polar.Types
 
 -- |Schedule IO to be performed after the current tick.
-io :: PolarT IO () -> Polar ()
+io :: MonadPolar m => PolarT IO () -> m ()
 io action = deferredIO %= (action :)
 
 -- |Exit out of the engine after the current tick.
-exit :: Polar ()
+exit :: MonadPolar m => m ()
 exit = willExit .= True

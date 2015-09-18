@@ -63,7 +63,7 @@ projection fov zNear zFar = [ s,   0.0, 0.0,                       0.0
 
 render :: GLFW.Window -> Drawable -> Listener ()
 render win drawable _ _ = io $ liftIO (GLFW.windowShouldClose win) >>= \case
-    True  -> hoistState exit
+    True  -> exit
     False -> do
         gl $ GL.clear [GL.ColorBuffer, GL.DepthBuffer]
         gl $ GL.drawArrays GL.Triangles 0 (fromIntegral (drawable ^. _1))
