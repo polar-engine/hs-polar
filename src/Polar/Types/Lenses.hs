@@ -9,8 +9,11 @@ module Polar.Types.Lenses where
 import Control.Lens.TH (makeFields)
 import Polar.Types.Point
 import Polar.Types.Box
-import Polar.Types.Engine
+import Polar.Types.Core
+import Polar.Types.LL
 
 makeFields ''Point
 makeFields ''Box
-makeFields ''Engine
+makeFields ''CoreState
+makeFields ''LLEnv
+makeFields ''LLState
