@@ -14,7 +14,7 @@ module Polar.Core.Run (run, loop) where
 
 import Control.Monad.RWS (liftIO)
 import Control.Concurrent (threadDelay)
-import Control.Lens (use)
+import Control.Lens.Getter (use)
 import Polar.Types
 import Polar.LL.Run (tick)
 

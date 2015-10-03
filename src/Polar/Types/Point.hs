@@ -14,7 +14,7 @@
 
 module Polar.Types.Point where
 
-import Control.Lens (Lens')
+import Control.Lens.Lens (Lens')
 
 -- |Representation of a 4-component point with x, y, z, and weight.
 data Point a = Point { _pointX :: a -- ^ x component

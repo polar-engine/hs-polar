@@ -12,7 +12,7 @@
 
 module Polar.LL.Run (tick) where
 
-import Control.Lens (view)
+import Control.Lens.Getter (view)
 import Polar.Types
 
 tick :: PolarLL [PolarCore ()]
