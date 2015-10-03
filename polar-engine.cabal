@@ -20,11 +20,15 @@ library
                        Polar.Core.Run,
                        Polar.LL.Run,
                        Polar.Types,
+                       Polar.Types.Config,
                        Polar.Types.Core,
                        Polar.Types.LL,
                        Polar.Types.Lenses
-  build-depends:       base >=4.8 && <4.9, mtl >=2.2, containers >=0.5.5, OpenGL >=2.12, OpenGLRaw >2.1, GLFW-b >=1.4.7, transformers >=0.4.2, bytestring >=0.10, lens >=4.12,
-                       tight-apply >=0.1 && <0.2, truthful >=0.1 && <0.2, polar-shader >=0.1 && <0.2
+  build-depends:       base >=4.8 && <5.0, containers >=0.5.5, transformers >=0.4, mtl >=2.2, bytestring >=0.10, lens >=4.12,
+                       hslogger >=1.2, hint >=0.4,
+                       OpenGL >=2.12, OpenGLRaw >2.1, GLFW-b >=1.4.7,
+                       tight-apply >=0.1 && <0.2, truthful >=0.1 && <0.2,
+                       polar-shader >=0.1 && <0.2, polar-configfile >=0.3
   default-language:    Haskell2010
   hs-source-dirs:      src
   ghc-options:         -W
@@ -33,7 +37,7 @@ library
 test-suite example-basic
   type:                exitcode-stdio-1.0
   main-is:             Main.hs
-  build-depends:       base >=4.8 && <5, lens >=4.12, polar-engine
+  build-depends:       base >=4.8 && <5.0, polar-engine
   default-language:    Haskell2010
   hs-source-dirs:      examples/basic
   ghc-options:         -W
