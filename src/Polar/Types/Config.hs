@@ -14,8 +14,8 @@ module Polar.Types.Config where
 
 import Polar.ConfigFile
 
-defaultConfig = emptyCP |%| "Core"     |$| "TimeToSleep"  |=| "10"
-                        |%| "Renderer" |$| "FieldOfView"  |=| "70"
-                                       |$| "ViewDistance" |=| "1000"
-                                       |$| "SSAO"         |=| "yes"
-                        |%| "Mixer"    |$| "Muted"        |=| "no"
+defaultConfig = "Core"     |$| "TimeToSleep"  |=| "10"
+            |%| "Renderer" |$| "FieldOfView"  |=| "70"
+                           |$| "ViewDistance" |=| "1000"
+                           |$| "SSAO"         |=| "yes"
+            |%| "Mixer"    |$| "Muted"        |=| "no"
