@@ -14,9 +14,14 @@
 module Polar.Core.Log where
 
 import Control.Monad.RWS (MonadIO, liftIO, when)
-import System.IO (hPutStrLn, stderr)
+import System.IO (BufferMode(LineBuffering), stderr, hPutStrLn, hSetBuffering)
 import Polar.Types
 import Polar.Core.Config
+
+setupLog :: PolarCore ()
+setupLog = do
+    logCore VERBOSE "setting up logger"
+    liftIO (hSetBuffering stderr LineBuffering)
 
 logCore :: Priority -> String -> PolarCore ()
 logCore priority msg = getConfig priorityOption "Core" "LogLevel"

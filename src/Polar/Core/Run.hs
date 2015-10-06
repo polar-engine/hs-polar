@@ -18,10 +18,16 @@ import Control.Concurrent (threadDelay)
 import Control.Lens.Getter (use)
 import Polar.Types
 import Polar.Core.Config
+import Polar.Core.Log
 import Polar.LL.Run (tick)
 
 run :: PolarCore ()
-run = loop
+run = setup *> loop
+
+setup :: PolarCore ()
+setup = do
+    logCore INFO "setting up core systems"
+    setupLog
 
 loop :: PolarCore ()
 loop = do
