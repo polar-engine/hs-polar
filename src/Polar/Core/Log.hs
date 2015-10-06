@@ -6,7 +6,7 @@
   Copyright   : (c) 2015 David Farrell
   License     : Apache-2.0
   Stability   : unstable
-  Portability : portable
+  Portability : non-portable (GHC extensions)
 
   Logging functions.
 -}
