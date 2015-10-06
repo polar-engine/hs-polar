@@ -17,9 +17,14 @@ module Polar.Core.Config (getConfig) where
 import Control.Lens.Getter (use)
 import Polar.ConfigFile
 import Polar.Types
+import {-# SOURCE #-} Polar.Core.Log (logFatal)
 
-class GetConfig a where getConfig :: ConfigProxy a -> SectionName -> OptionName -> PolarCore (Either ConfigError a)
+class GetConfig a where getConfig :: ConfigProxy a -> SectionName -> OptionName -> PolarCore a
 
-instance {-# OVERLAPPABLE #-} Read a => GetConfig a where getConfig ConfigProxy sect opt = (\cp -> get cp sect opt) <$> use config
-instance GetConfig String                           where getConfig ConfigProxy sect opt = (\cp -> get cp sect opt) <$> use config
-instance GetConfig Bool                             where getConfig ConfigProxy sect opt = (\cp -> get cp sect opt) <$> use config
+instance {-# OVERLAPPABLE #-} Read a => GetConfig a where getConfig _ s o = (\c -> get c s o) <$> use config >>= forceOption
+instance GetConfig String                           where getConfig _ s o = (\c -> get c s o) <$> use config >>= forceOption
+instance GetConfig Bool                             where getConfig _ s o = (\c -> get c s o) <$> use config >>= forceOption
+
+forceOption :: Either ConfigError a -> PolarCore a
+forceOption (Left (err, _)) = logFatal ("failed to get config option (" ++ show err ++ ")")
+forceOption (Right x) = return x

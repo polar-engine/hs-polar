@@ -19,7 +19,6 @@ import Control.Lens.Getter (use)
 import Polar.Types
 import Polar.Core.Config
 import Polar.LL.Run (tick)
-import System.IO
 
 run :: PolarCore ()
 run = loop
@@ -28,7 +27,5 @@ loop :: PolarCore ()
 loop = do
     (core, _, _) <- runLL tick . LLEnv <$> use llTickFunctions <*> use llState
     sequence_ core
-    getConfig integerOption "Core" "TimeToSleep" >>= \case
-        Left (_, err) -> liftIO (putStrLn err) -- TODO: do something better here
-        Right i       -> liftIO (threadDelay (fromInteger i))
+    getConfig integerOption "Core" "TimeToSleep" >>= liftIO . threadDelay . fromInteger
     loop

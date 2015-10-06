@@ -18,15 +18,17 @@ source-repository head
 library
   exposed-modules:     Polar.Run,
                        Polar.Core.Config,
+                       Polar.Core.Log,
                        Polar.Core.Run,
                        Polar.LL.Run,
                        Polar.Types,
-                       Polar.Types.Config,
                        Polar.Types.Core,
+                       Polar.Types.Config,
+                       Polar.Types.Log,
                        Polar.Types.LL,
                        Polar.Types.Lenses
   build-depends:       base >=4.8 && <5.0, containers >=0.5.5, transformers >=0.4, mtl >=2.2, bytestring >=0.10, lens >=4.12,
-                       hslogger >=1.2, hint >=0.4,
+                       hint >=0.4,
                        OpenGL >=2.12, OpenGLRaw >2.1, GLFW-b >=1.4.7,
                        tight-apply >=0.1 && <0.2, truthful >=0.1 && <0.2,
                        polar-shader >=0.1 && <0.2, polar-configfile >=0.4.1
