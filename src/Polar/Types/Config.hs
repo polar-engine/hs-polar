@@ -14,8 +14,20 @@ module Polar.Types.Config where
 
 import Polar.ConfigFile
 
-defaultConfig = "Core"     |$| "TimeToSleep"  |=| "10"
+defaultConfig = emptyCP { optionNameTransform = id }
+            |%| "Core"     |$| "TimeToSleep"  |=| "1000"
             |%| "Renderer" |$| "FieldOfView"  |=| "70"
                            |$| "ViewDistance" |=| "1000"
                            |$| "SSAO"         |=| "yes"
             |%| "Mixer"    |$| "Muted"        |=| "no"
+
+data ConfigProxy a = ConfigProxy
+
+stringOption :: ConfigProxy String
+stringOption = ConfigProxy
+
+boolOption :: ConfigProxy Bool
+boolOption = ConfigProxy
+
+integerOption :: ConfigProxy Integer
+integerOption = ConfigProxy

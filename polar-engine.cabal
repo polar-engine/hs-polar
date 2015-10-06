@@ -17,6 +17,7 @@ source-repository head
 
 library
   exposed-modules:     Polar.Run,
+                       Polar.Core.Config,
                        Polar.Core.Run,
                        Polar.LL.Run,
                        Polar.Types,
