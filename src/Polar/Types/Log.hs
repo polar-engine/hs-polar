@@ -14,7 +14,7 @@ module Polar.Types.Log where
 
 import Polar.Types.Config (ConfigProxy(..))
 
-data Priority = TRACE | DEBUG | INFO | NOTICE | WARNING | ERROR | CRITICAL | FATAL
+data Priority = TRACE | DEBUG | VERBOSE | INFO | NOTICE | WARNING | ERROR | CRITICAL | FATAL
                 deriving (Eq, Ord, Read, Show)
 
 priorityOption :: ConfigProxy Priority
