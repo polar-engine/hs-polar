@@ -12,7 +12,7 @@
 
 module Polar.Types.Core where
 
-import Control.Monad.RWS (RWST, runRWST, liftIO)
+import Control.Monad.RWS (RWST, runRWST)
 import Polar.ConfigFile
 import Polar.Types.Config
 import Polar.Types.LL
@@ -32,7 +32,7 @@ defaultCoreState :: CoreState
 defaultCoreState = CoreState
     { _coreStateConfig          = defaultConfig
     , _coreStateLlState         = defaultLLState
-    , _coreStateLlTickFunctions = [pure [liftIO (print "hello")]]
+    , _coreStateLlTickFunctions = []
     }
 
 runCore :: PolarCore a -> CoreEnv -> CoreState -> IO (a, CoreState, CoreOutput)

@@ -13,9 +13,10 @@
 module Polar.Run (run) where
 
 import Control.Monad (void)
-import Polar.Types.Core (defaultCoreState, runCore)
+import Polar.Types
+import Polar.Core.Log
 import qualified Polar.Core.Run as C (run)
 
 -- |Run the engine using the default initial state.
 run :: IO ()
-run = void $ runCore C.run () defaultCoreState
+run = void $ runCore C.run () defaultCoreState { _coreStateLlTickFunctions = [pure [logCore DEBUG "hello"]] }
