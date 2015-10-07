@@ -27,6 +27,7 @@ run = setup *> loop
 setup :: PolarCore ()
 setup = do
     logCore INFO "setting up core systems"
+    setupConfig
     setupLog
 
 loop :: PolarCore ()

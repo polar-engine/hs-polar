@@ -12,12 +12,20 @@
   Engine configuration functions.
 -}
 
-module Polar.Core.Config (getConfig) where
+module Polar.Core.Config (setupConfig, getConfig) where
 
 import Control.Lens.Getter (use)
+import Control.Lens.Setter (assign)
 import Polar.ConfigFile
 import Polar.Types
 import {-# SOURCE #-} Polar.Core.Log (logFatal)
+import Polar.Core.File
+
+setupConfig :: PolarCore ()
+setupConfig = use config >>= load >>= assign config
+  where load cp = loadFileNow "engine.cfg" >>= forceLoad . readFromString cp
+        forceLoad (Left (err, _)) = logFatal ("failed to load config file (" ++ show err ++ ")")
+        forceLoad (Right cp) = return cp
 
 class GetConfig a where getConfig :: ConfigProxy a -> SectionName -> OptionName -> PolarCore a
 
