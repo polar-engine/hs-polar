@@ -23,9 +23,9 @@ import Polar.Core.File
 
 setupConfig :: PolarCore ()
 setupConfig = use config >>= load >>= assign config
-  where load cp = loadFileNow "engine.cfg" >>= forceLoad . readFromString cp
-        forceLoad (Left (err, _)) = logFatal ("failed to load config file (" ++ show err ++ ")")
-        forceLoad (Right cp) = return cp
+  where load cp = loadFileNow "engine.cfg" >>= forceParse . readFromString cp
+        forceParse (Left (err, _)) = logFatal ("failed to load config file (" ++ show err ++ ")")
+        forceParse (Right cp) = return cp
 
 class GetConfig a where getConfig :: ConfigProxy a -> SectionName -> OptionName -> PolarCore a
 
