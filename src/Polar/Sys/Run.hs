@@ -10,10 +10,21 @@
   This module defines functions for running the engine systems abstraction layer.
 -}
 
-module Polar.Sys.Run (tick) where
+module Polar.Sys.Run (tickSys) where
 
-import Control.Lens.Getter (view)
+import Data.Foldable (traverse_)
+import Control.Monad.RWS (tell)
+import Control.Lens.Getter (use)
 import Polar.Types
+import Polar.Log (logWrite)
+import Polar.Logic.Run (tickLogic)
 
-tick :: Sys ()
-tick = view tickFunctions >>= sequence_
+tickSys :: Sys ()
+tickSys = do
+    (_, _, logicActs) <- runLogic tickLogic () <$> use logicState
+    traverse_ runLogicAction logicActs
+    sequence_ =<< use tickFunctions
+
+runLogicAction :: LogicAction -> Sys ()
+runLogicAction LogicExitAction = tell [SysExitAction]
+runLogicAction (LogicLogWriteAction priority msg) = logWrite priority msg

@@ -23,7 +23,6 @@ type CoreOutput = ()
 data CoreState = CoreState
     { _coreStateConfig           :: ConfigParser
     , _coreStateSysState         :: SysState
-    , _coreStateSysTickFunctions :: [Sys ()]
     }
 
 type Core = RWST CoreEnv CoreOutput CoreState IO
@@ -32,7 +31,6 @@ defaultCoreState :: CoreState
 defaultCoreState = CoreState
     { _coreStateConfig           = defaultConfig
     , _coreStateSysState         = defaultSysState
-    , _coreStateSysTickFunctions = []
     }
 
 runCore :: Core a -> CoreEnv -> CoreState -> IO (a, CoreState, CoreOutput)

@@ -1,4 +1,4 @@
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Trustworthy #-}
 
 {-|
   Module      : Polar.Run
@@ -13,11 +13,12 @@
 module Polar.Run (run) where
 
 import Control.Monad (void)
+import Control.Lens ((&), (.~))
 import Polar.Types
 import Polar.Log
 import qualified Polar.Core.Run as C (run)
 
 -- |Run the engine using the default initial state.
 run :: IO ()
-run = void $ runCore C.run () defaultCoreState
-    { _coreStateSysTickFunctions = [logWrite DEBUG "hello"] }
+run = void $ runCore C.run () $
+    defaultCoreState&sysState.logicState.tickFunctions .~ [logWrite DEBUG "hello"]

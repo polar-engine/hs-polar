@@ -14,27 +14,29 @@ module Polar.Types.Sys where
 
 import Control.Monad.RWS (RWS, runRWS)
 import {-# SOURCE #-} Polar.Types.Core (Core)
+import Polar.Types.Logic
 import Polar.Types.Log (Priority)
 
-data SysEnv = SysEnv
-    { _sysEnvTickFunctions :: [Sys ()]
-    }
+type SysEnv = ()
 
 data SysAction = SysExitAction
                | SysLogWriteAction Priority String
                | SysCoreAction (Core ())
 
 type SysOutput = [SysAction]
-data SysState = SysState {}
-type Sys = RWS SysEnv SysOutput SysState
 
-defaultSysEnv :: SysEnv
-defaultSysEnv = SysEnv
-    { _sysEnvTickFunctions = []
+data SysState = SysState
+    { _sysStateLogicState    :: LogicState
+    , _sysStateTickFunctions :: [Sys ()]
     }
 
+type Sys = RWS SysEnv SysOutput SysState
+
 defaultSysState :: SysState
-defaultSysState = SysState {}
+defaultSysState = SysState
+    { _sysStateLogicState    = defaultLogicState
+    , _sysStateTickFunctions = []
+    }
 
 runSys :: Sys a -> SysEnv -> SysState -> (a, SysState, SysOutput)
 runSys = runRWS

@@ -26,7 +26,8 @@ instance LogPolar Core where
         level <- getConfig priorityOption "Log" "Level"
         when (priority >= level) (logIO priority msg)
 
-instance LogPolar Sys where logWrite priority msg = tell [SysLogWriteAction priority msg]
+instance LogPolar Sys   where logWrite priority msg = tell [SysLogWriteAction priority msg]
+instance LogPolar Logic where logWrite priority msg = tell [LogicLogWriteAction priority msg]
 
 setupLog :: Core ()
 setupLog = do

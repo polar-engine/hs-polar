@@ -11,9 +11,10 @@ import Polar.Types.Point
 import Polar.Types.Box
 import Polar.Types.Core
 import Polar.Types.Sys
+import Polar.Types.Logic
 
 makeFields ''Point
 makeFields ''Box
 makeFields ''CoreState
-makeFields ''SysEnv
 makeFields ''SysState
+makeFields ''LogicState

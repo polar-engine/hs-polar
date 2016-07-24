@@ -20,7 +20,7 @@ import Control.Lens.Getter (use)
 import Polar.Types
 import Polar.Core.Config
 import Polar.Log (setupLog, logWrite)
-import Polar.Sys.Run (tick)
+import Polar.Sys.Run (tickSys)
 
 run :: Core ()
 run = setup *> loop
@@ -33,7 +33,7 @@ setup = do
 
 loop :: Core ()
 loop = do
-    (_, _, sysActs) <- runSys tick . SysEnv <$> use sysTickFunctions <*> use sysState
+    (_, _, sysActs) <- runSys tickSys () <$> use sysState
     traverse_ runSysAction sysActs
     liftIO . threadDelay . fromInteger =<< getConfig integerOption "Core" "TimeToSleep"
     loop
