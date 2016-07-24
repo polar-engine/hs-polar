@@ -23,7 +23,7 @@ class Monad m => LogPolar m where logWrite :: Priority -> String -> m ()
 
 instance LogPolar Core where
     logWrite priority msg = do
-        level <- getConfig priorityOption "Core" "LogLevel"
+        level <- getConfig priorityOption "Log" "Level"
         when (priority >= level) (logIO priority msg)
 
 instance LogPolar Sys where logWrite priority msg = tell [SysLogWriteAction priority msg]

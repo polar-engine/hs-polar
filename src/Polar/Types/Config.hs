@@ -16,7 +16,7 @@ import Polar.ConfigFile
 
 defaultConfig = emptyCP { optionNameTransform = id }
             |%| "Core"     |$| "TimeToSleep"  |=| "1000"
-                           |$| "LogLevel"     |=| "DEBUG"
+            |%| "Log"      |$| "Level"        |=| "DEBUG"
             |%| "Renderer" |$| "FieldOfView"  |=| "70"
                            |$| "ViewDistance" |=| "1000"
                            |$| "SSAO"         |=| "yes"
