@@ -2,7 +2,7 @@
 
 module Main where
 
-import Polar.Run (run)
+import Polar
 
 main :: IO ()
-main = run
+main = run [] [logWrite DEBUG "hello world"]

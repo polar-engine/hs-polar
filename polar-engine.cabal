@@ -16,7 +16,8 @@ source-repository head
   location:            https://github.com/polar-engine/polar.git
 
 library
-  exposed-modules:     Polar.Run,
+  exposed-modules:     Polar,
+                       Polar.Run,
                        Polar.Log,
                        Polar.Core.Config,
                        Polar.Core.File,

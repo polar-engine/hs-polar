@@ -15,10 +15,10 @@ module Polar.Run (run) where
 import Control.Monad (void)
 import Control.Lens ((&), (.~))
 import Polar.Types
-import Polar.Log
 import qualified Polar.Core.Run as C (run)
 
--- |Run the engine using the default initial state.
-run :: IO ()
-run = void $ runCore C.run () $
-    defaultCoreState&sysState.logicState.tickFunctions .~ [logWrite DEBUG "hello"]
+-- |Run the engine using the given initial state.
+run :: [Logic ()] -> [Sys ()] -> IO ()
+run logic sys = void $ runCore C.run () $ defaultCoreState
+    & sysState . tickFunctions              .~ sys
+    & sysState . logicState . tickFunctions .~ logic
