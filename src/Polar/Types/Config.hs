@@ -2,7 +2,7 @@
 
 {-|
   Module      : Polar.Types.Config
-  Copyright   : (c) 2015 David Farrell
+  Copyright   : (c) 2015-2016 David Farrell
   License     : Apache-2.0
   Stability   : unstable
   Portability : portable
