@@ -19,6 +19,7 @@ library
   exposed-modules:     Polar,
                        Polar.Run,
                        Polar.Log,
+                       Polar.Exit,
                        Polar.Core.Config,
                        Polar.Core.File,
                        Polar.Core.Run,

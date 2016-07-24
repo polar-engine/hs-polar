@@ -20,6 +20,7 @@ import Control.Lens.Getter (use)
 import Polar.Types
 import Polar.Core.Config
 import Polar.Log (setupLog, logWrite)
+import Polar.Exit (exit)
 import Polar.Sys.Run (tickSys)
 
 run :: Core ()
@@ -39,6 +40,6 @@ loop = do
     loop
 
 runSysAction :: SysAction -> Core ()
-runSysAction SysExitAction = undefined
+runSysAction SysExitAction = exit
 runSysAction (SysLogWriteAction priority msg) = logWrite priority msg
 runSysAction (SysCoreAction core) = core

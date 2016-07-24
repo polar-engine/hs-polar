@@ -13,9 +13,11 @@
 module Polar
 ( module Polar.Run
 , module Polar.Log
+, module Polar.Exit
 , module Polar.Types
 ) where
 
 import Polar.Run
 import Polar.Log
+import Polar.Exit
 import Polar.Types
