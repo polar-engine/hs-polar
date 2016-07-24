@@ -3,7 +3,7 @@
 
 {-|
   Module      : Polar.Core.Run
-  Copyright   : (c) 2015 David Farrell
+  Copyright   : (c) 2015-2016 David Farrell
   License     : Apache-2.0
   Stability   : unstable
   Portability : non-portable (GHC extensions)
@@ -13,26 +13,32 @@
 
 module Polar.Core.Run (run, loop) where
 
+import Data.Foldable (traverse_)
 import Control.Monad.RWS (liftIO)
 import Control.Concurrent (threadDelay)
 import Control.Lens.Getter (use)
 import Polar.Types
 import Polar.Core.Config
-import Polar.Core.Log
-import Polar.LL.Run (tick)
+import Polar.Log (setupLog, logWrite)
+import Polar.Sys.Run (tick)
 
-run :: PolarCore ()
+run :: Core ()
 run = setup *> loop
 
-setup :: PolarCore ()
+setup :: Core ()
 setup = do
-    logCore INFO "setting up core systems"
+    logWrite INFO "setting up core systems"
     setupConfig
     setupLog
 
-loop :: PolarCore ()
+loop :: Core ()
 loop = do
-    (core, _, _) <- runLL tick . LLEnv <$> use llTickFunctions <*> use llState
-    sequence_ core
-    getConfig integerOption "Core" "TimeToSleep" >>= liftIO . threadDelay . fromInteger
+    (_, _, sysActs) <- runSys tick . SysEnv <$> use sysTickFunctions <*> use sysState
+    traverse_ runSysAction sysActs
+    liftIO . threadDelay . fromInteger =<< getConfig integerOption "Core" "TimeToSleep"
     loop
+
+runSysAction :: SysAction -> Core ()
+runSysAction SysExitAction = undefined
+runSysAction (SysLogWriteAction priority msg) = logWrite priority msg
+runSysAction (SysCoreAction core) = core

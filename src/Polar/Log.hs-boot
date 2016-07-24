@@ -1,6 +1,6 @@
 {-# LANGUAGE Safe #-}
 
-module Polar.Core.Log where
+module Polar.Log where
 
 import Control.Monad.RWS (MonadIO)
 

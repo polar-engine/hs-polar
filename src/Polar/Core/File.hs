@@ -2,7 +2,7 @@
 
 {-|
   Module      : Polar.Core.File
-  Copyright   : (c) 2015 David Farrell
+  Copyright   : (c) 2015-2016 David Farrell
   License     : Apache-2.0
   Stability   : unstable
   Portability : portable
@@ -14,7 +14,7 @@ module Polar.Core.File (loadFileNow) where
 
 import Control.Monad.RWS (MonadIO, liftIO)
 import Control.Exception (IOException, catch)
-import {-# SOURCE #-} Polar.Core.Log (logFatal)
+import {-# SOURCE #-} Polar.Log (logFatal)
 
 loadFileNow :: MonadIO m => FilePath -> m String
 loadFileNow path = liftIO (readFile path `catch` handler path)

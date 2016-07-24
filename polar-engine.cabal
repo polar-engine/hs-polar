@@ -6,7 +6,7 @@ license:             Apache-2.0
 license-file:        LICENSE
 author:              David Farrell
 maintainer:          David Farrell <shokku.ra@gmail.com>
-copyright:           Copyright (C) 2014-2015 David Farrell
+copyright:           Copyright (C) 2014-2016 David Farrell
 category:            Game Engine
 build-type:          Simple
 cabal-version:       >=1.10
@@ -17,16 +17,16 @@ source-repository head
 
 library
   exposed-modules:     Polar.Run,
+                       Polar.Log,
                        Polar.Core.Config,
                        Polar.Core.File,
-                       Polar.Core.Log,
                        Polar.Core.Run,
-                       Polar.LL.Run,
+                       Polar.Sys.Run,
                        Polar.Types,
                        Polar.Types.Core,
                        Polar.Types.Config,
                        Polar.Types.Log,
-                       Polar.Types.LL,
+                       Polar.Types.Sys,
                        Polar.Types.Lenses
   build-depends:       base >=4.8 && <5.0, containers >=0.5.5, transformers >=0.4, mtl >=2.2, bytestring >=0.10, lens >=4.12,
                        hint >=0.4,

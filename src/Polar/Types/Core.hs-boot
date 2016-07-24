@@ -7,4 +7,4 @@ import Control.Monad.RWS (RWST)
 type CoreEnv = ()
 type CoreOutput = ()
 data CoreState
-type PolarCore = RWST CoreEnv CoreOutput CoreState IO
+type Core = RWST CoreEnv CoreOutput CoreState IO

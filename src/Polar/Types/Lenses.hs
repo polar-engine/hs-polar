@@ -10,10 +10,10 @@ import Control.Lens.TH (makeFields)
 import Polar.Types.Point
 import Polar.Types.Box
 import Polar.Types.Core
-import Polar.Types.LL
+import Polar.Types.Sys
 
 makeFields ''Point
 makeFields ''Box
 makeFields ''CoreState
-makeFields ''LLEnv
-makeFields ''LLState
+makeFields ''SysEnv
+makeFields ''SysState
