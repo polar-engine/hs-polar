@@ -35,9 +35,8 @@ import Polar.Types
 
 hello :: System
 hello = defaultSystem
-    { name     = "Hello"
-    , startup  = startupF
-    , shutdown = shutdownF
-    , tick     = tickF
-    }
+    & name     .~ "Hello"
+    & startup  .~ startupF
+    & shutdown .~ shutdownF
+    & tick     .~ tickF
 ```
