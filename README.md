@@ -30,7 +30,7 @@ The bottom layer is called Core and represents the inner workings of the engine.
 
 ###### `Hello.hs`
 ```haskell
-module Hello where
+module Hello (hello) where
 
 import Polar.Types
 import Polar.Log
@@ -49,10 +49,17 @@ shutdownF :: Sys ()
 shutdownF = logWrite WARNING "i don't hate you"
 
 tickF :: Sys ()
-tickF = logWrite INFO "hello"
+tickF = do
+    logWrite INFO "hello"
+    exit
 ```
 
 ###### `Main.hs`
 ```haskell
+import Polar.Run
+import Polar.Exit
+import Hello
+
 main :: IO ()
+main = run [hello] []
 ```
