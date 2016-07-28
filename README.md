@@ -57,7 +57,6 @@ tickF = do
 ###### `Main.hs`
 ```haskell
 import Polar.Run
-import Polar.Exit
 import Hello
 
 main :: IO ()
