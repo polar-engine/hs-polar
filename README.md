@@ -25,3 +25,19 @@ The bottom layer is called Core and represents the inner workings of the engine.
 | SysExitAction                      | shutdown and exit                                               |
 | SysLogWriteAction Priority Message | write to log if Priority is higher than Log.Level config option |
 | SysCoreAction Core                 | directly execute Core action (unsafe, backdoor)                 |
+
+## Writing a System
+
+```haskell
+module Hello where
+
+import Polar.Types
+
+hello :: System
+hello = defaultSystem
+    { name     = "Hello"
+    , startup  = startupF
+    , shutdown = shutdownF
+    , tick     = tickF
+    }
+```
