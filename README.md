@@ -32,6 +32,7 @@ The bottom layer is called Core and represents the inner workings of the engine.
 module Hello where
 
 import Polar.Types
+import Polar.Log
 
 hello :: System
 hello = defaultSystem
@@ -39,4 +40,13 @@ hello = defaultSystem
     & startup  .~ startupF
     & shutdown .~ shutdownF
     & tick     .~ tickF
+
+startupF :: Sys ()
+startupF = logWrite WARNING "let's make some noise"
+
+shutdownF :: Sys ()
+shutdownF = logWrite WARNING "i don't hate you"
+
+tickF :: Sys ()
+tickF = logWrite INFO "hello"
 ```
