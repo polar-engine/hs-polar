@@ -51,3 +51,8 @@ shutdownF = logWrite WARNING "i don't hate you"
 tickF :: Sys ()
 tickF = logWrite INFO "hello"
 ```
+
+###### `Main.hs`
+```haskell
+main :: IO ()
+```
