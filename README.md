@@ -66,3 +66,19 @@ main = run [hello] []
 ```
 
 ### Text Renderer
+
+###### `TextRenderer.hs`
+
+```haskell
+module TextRenderer (textRenderer) where
+
+```
+
+###### `Main.hs`
+```haskell
+import Polar.Run
+import TextRenderer
+
+main :: IO ()
+main = run [textRenderer] []
+```
