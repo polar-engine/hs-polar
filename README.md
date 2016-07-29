@@ -28,6 +28,8 @@ The bottom layer is called Core and represents the inner workings of the engine.
 
 ## Writing a System
 
+### Hello World
+
 ###### `Hello.hs`
 ```haskell
 module Hello (hello) where
@@ -62,3 +64,5 @@ import Hello
 main :: IO ()
 main = run [hello] []
 ```
+
+### Text Renderer
