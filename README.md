@@ -72,6 +72,14 @@ main = run [hello] []
 ```haskell
 module TextRenderer (textRenderer) where
 
+textRenderer :: System
+textRenderer = defaultSystem
+    & name        .~ "TextRenderer"
+    & description .~ "A simple text renderer"
+    & handlers    .~ [H stringH]
+
+stringH :: Handler String
+stringH s = logWrite INFO ("saw " ++ s)
 ```
 
 ###### `Main.hs`
