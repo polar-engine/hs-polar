@@ -1,5 +1,3 @@
-{-# LANGUAGE Safe #-}
-
 module Main where
 
 import Polar
