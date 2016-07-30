@@ -3,4 +3,6 @@ module Main where
 import Polar
 
 main :: IO ()
-main = run [logWrite DEBUG "hello world", exit] []
+main = run $ defaultEngine
+    & sysTicks .~ [logWrite DEBUG "hello world"]
+--    & systems  .~ [hello]

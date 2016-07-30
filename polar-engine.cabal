@@ -29,6 +29,7 @@ library
                        Polar.Types.Core,
                        Polar.Types.Sys,
                        Polar.Types.Logic,
+                       Polar.Types.Engine,
                        Polar.Types.Config,
                        Polar.Types.Log,
                        Polar.Types.Lenses
