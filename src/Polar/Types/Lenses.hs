@@ -18,5 +18,6 @@ makeFields ''Point
 makeFields ''Box
 makeFields ''CoreState
 makeFields ''SysState
+makeFields ''System
 makeFields ''LogicState
 makeFields ''Engine

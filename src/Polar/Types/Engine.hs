@@ -18,10 +18,12 @@ import Polar.Types.Logic
 data Engine = Engine
     { _engineSysTicks   :: [Sys ()]
     , _engineLogicTicks :: [Logic ()]
+    , _engineSystems    :: [System]
     }
 
 defaultEngine :: Engine
 defaultEngine = Engine
     { _engineSysTicks   = []
     , _engineLogicTicks = []
+    , _engineSystems    = []
     }

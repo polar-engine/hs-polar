@@ -28,6 +28,7 @@ type SysOutput = [SysAction]
 data SysState = SysState
     { _sysStateLogicState    :: LogicState
     , _sysStateTickFunctions :: [Sys ()]
+    , _sysStateSystems       :: [System]
     }
 
 type Sys = RWS SysEnv SysOutput SysState
@@ -36,7 +37,19 @@ defaultSysState :: SysState
 defaultSysState = SysState
     { _sysStateLogicState    = defaultLogicState
     , _sysStateTickFunctions = []
+    , _sysStateSystems       = []
     }
 
 runSys :: Sys a -> SysEnv -> SysState -> (a, SysState, SysOutput)
 runSys = runRWS
+
+data System = System
+    { _systemName :: String
+    , _systemTick :: Sys ()
+    }
+
+defaultSystem :: String -> System
+defaultSystem name = System
+    { _systemName = name
+    , _systemTick = pure ()
+    }
