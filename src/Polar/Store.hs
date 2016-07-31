@@ -24,11 +24,11 @@ import Polar.Log
 
 class Monad m => StorePolar m where
     storeDyn    :: Dynamic -> String -> m ()
-    retrieveDyn :: TypeRep -> String -> m Dynamic
+    retrieveDyn :: TypeRep -> String -> m (Maybe Dynamic)
 
 instance StorePolar Core where
     storeDyn    dyn k = pure ()
-    retrieveDyn rep k = pure undefined
+    retrieveDyn rep k = pure Nothing
 
 as :: a
 as = undefined
@@ -37,10 +37,10 @@ store :: (StorePolar m, Typeable a) => a -> String -> m ()
 store x k = storeDyn (toDyn x) k
 
 retrieve :: forall m a. (StorePolar m, Typeable a) => a -> String -> m (Maybe a)
-retrieve _ k = fromDynamic <$> retrieveDyn (typeRep (Proxy :: Proxy a)) k
+retrieve _ k = maybe Nothing fromDynamic <$> retrieveDyn rep k
+  where rep = typeRep (Proxy :: Proxy a)
 
 forceRetrieve :: forall m a. (MonadIO m, StorePolar m, Typeable a) => a -> String -> m a
-forceRetrieve _ k = retrieve as k >>= \case
-    Nothing -> logFatal ("Failed to retrieve value from store (TypeRep=" ++ show rep ++ ",Key=" ++ k ++ ")")
-    Just x  -> pure x
+forceRetrieve _ k = maybe (logFatal msg) pure =<< retrieve as k
   where rep = typeRep (Proxy :: Proxy a)
+        msg = "Failed to retrieve value from store (TypeRep = " ++ show rep ++ ", Key = " ++ k ++ ")"
