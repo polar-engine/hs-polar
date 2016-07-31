@@ -21,16 +21,18 @@ type CoreEnv = ()
 type CoreOutput = ()
 
 data CoreState = CoreState
-    { _coreStateConfig           :: ConfigParser
-    , _coreStateSysState         :: SysState
+    { _coreStateConfig     :: ConfigParser
+    , _coreStateSysState   :: SysState
+    , _coreStateShouldExit :: Bool
     }
 
 type Core = RWST CoreEnv CoreOutput CoreState IO
 
 defaultCoreState :: CoreState
 defaultCoreState = CoreState
-    { _coreStateConfig           = defaultConfig
-    , _coreStateSysState         = defaultSysState
+    { _coreStateConfig     = defaultConfig
+    , _coreStateSysState   = defaultSysState
+    , _coreStateShouldExit = False
     }
 
 runCore :: Core a -> CoreEnv -> CoreState -> IO (a, CoreState, CoreOutput)

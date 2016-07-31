@@ -29,10 +29,8 @@ instance LogPolar Core where
 instance LogPolar Sys   where logWrite priority msg = tell [SysLogWriteAction priority msg]
 instance LogPolar Logic where logWrite priority msg = tell [LogicLogWriteAction priority msg]
 
-setupLog :: Core ()
-setupLog = do
-    logWrite VERBOSE "setting up logger"
-    liftIO (hSetBuffering stderr LineBuffering)
+startupLog :: Core ()
+startupLog = liftIO (hSetBuffering stderr LineBuffering)
 
 logFatal :: MonadIO m => String -> m a
 logFatal msg = do

@@ -4,7 +4,8 @@ import Polar
 
 hello :: System
 hello = defaultSystem "Hello"
-    & tick .~ logWrite DEBUG "Hello!"
+    & startup  .~ logWrite NOTICE "Hello!"
+    & shutdown .~ logWrite NOTICE "Goodbye... :("
 
 quitter :: System
 quitter = defaultSystem "Quitter"

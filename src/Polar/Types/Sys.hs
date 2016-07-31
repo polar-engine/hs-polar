@@ -42,12 +42,16 @@ runSys :: Sys a -> SysEnv -> SysState -> (a, SysState, SysOutput)
 runSys = runRWS
 
 data System = System
-    { _systemName :: String
-    , _systemTick :: Sys ()
+    { _systemName     :: String
+    , _systemStartup  :: Sys ()
+    , _systemTick     :: Sys ()
+    , _systemShutdown :: Sys ()
     }
 
 defaultSystem :: String -> System
 defaultSystem name = System
-    { _systemName = name
-    , _systemTick = pure ()
+    { _systemName     = name
+    , _systemStartup  = pure ()
+    , _systemTick     = pure ()
+    , _systemShutdown = pure ()
     }

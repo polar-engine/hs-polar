@@ -14,30 +14,40 @@
 module Polar.Core.Run (run, loop) where
 
 import Data.Foldable (traverse_)
-import Control.Monad.RWS (liftIO)
+import Control.Monad.RWS (unless, liftIO)
 import Control.Concurrent (threadDelay)
 import Control.Lens.Getter (use)
 import Polar.Types
 import Polar.Core.Config
-import Polar.Log (setupLog, logWrite)
+import Polar.Log (startupLog, logWrite)
 import Polar.Exit (exit)
-import Polar.Sys.Run (tickSys)
+import Polar.Sys.Run
 
 run :: Core ()
-run = setup *> loop
+run = startupCore *> loop *> shutdownCore
 
-setup :: Core ()
-setup = do
-    logWrite INFO "setting up core systems"
-    setupConfig
-    setupLog
+startupCore :: Core ()
+startupCore = do
+    logWrite DEBUG "Starting up Config"
+    startupConfig
+    logWrite DEBUG "Starting up Log"
+    startupLog
+    (_, _, sysActs) <- runSys startupSys () <$> use sysState
+    traverse_ runSysAction sysActs
 
 loop :: Core ()
 loop = do
     (_, _, sysActs) <- runSys tickSys () <$> use sysState
     traverse_ runSysAction sysActs
     liftIO . threadDelay . fromInteger =<< getConfig integerOption "Core" "TimeToSleep"
-    loop
+    flip unless loop =<< use shouldExit
+
+shutdownCore :: Core ()
+shutdownCore = do
+    (_, _, sysActs) <- runSys shutdownSys () <$> use sysState
+    traverse_ runSysAction sysActs
+    logWrite DEBUG "Shutting down Log"
+    logWrite DEBUG "Shutting down Config"
 
 runSysAction :: SysAction -> Core ()
 runSysAction SysExitAction = exit
