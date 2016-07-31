@@ -23,7 +23,6 @@ tickSys :: Sys ()
 tickSys = do
     (_, _, logicActs) <- runLogic tickLogic () <$> use logicState
     traverse_ runLogicAction logicActs
-    sequence_ =<< use tickFunctions
     sequenceOf_ (systems.folded.tick) =<< get
 
 runLogicAction :: LogicAction -> Sys ()

@@ -27,7 +27,6 @@ type SysOutput = [SysAction]
 
 data SysState = SysState
     { _sysStateLogicState    :: LogicState
-    , _sysStateTickFunctions :: [Sys ()]
     , _sysStateSystems       :: [System]
     }
 
@@ -36,7 +35,6 @@ type Sys = RWS SysEnv SysOutput SysState
 defaultSysState :: SysState
 defaultSysState = SysState
     { _sysStateLogicState    = defaultLogicState
-    , _sysStateTickFunctions = []
     , _sysStateSystems       = []
     }
 
