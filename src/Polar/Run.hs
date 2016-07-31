@@ -19,5 +19,5 @@ import qualified Polar.Core.Run as C (run)
 -- |Run the engine using the given initial state.
 run :: Engine -> IO ()
 run engine = void $ runCore C.run () $ defaultCoreState
-    & sysState . logicState . tickFunctions .~ engine ^. logicTicks
-    & sysState . systems                    .~ engine ^. systems
+    & sysState.logicState.tickFunctions .~ engine^.logicTicks
+    & sysState.systems                  .~ engine^.systems

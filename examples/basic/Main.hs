@@ -12,4 +12,4 @@ quitter = defaultSystem "Quitter"
 
 main :: IO ()
 main = run $ defaultEngine
-    & systems  .~ [hello, quitter]
+    & systems .~ [hello, quitter]
