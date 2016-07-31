@@ -14,7 +14,6 @@
 
 module Polar.Core.Config (startupConfig, getConfig) where
 
-import Control.Lens.Getter (use)
 import Control.Lens.Setter (assign)
 import Polar.ConfigFile
 import Polar.Types

@@ -48,4 +48,5 @@ shutdownF = tell [SysCoreAction shutdownWindow]
 shutdownWindow :: Core ()
 shutdownWindow = do
     liftIO . GLFW.destroyWindow =<< forceRetrieve as "window"
+    logWrite DEBUG "Destroyed window"
     liftIO GLFW.terminate

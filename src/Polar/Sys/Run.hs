@@ -14,7 +14,7 @@ module Polar.Sys.Run (startupSys, tickSys, shutdownSys) where
 
 import Data.Foldable (traverse_)
 import Control.Monad.RWS (get, tell)
-import Control.Lens (use, folded, sequenceOf_)
+import Control.Lens (folded, sequenceOf_)
 import Polar.Types
 import Polar.Log (logWrite)
 import Polar.Logic.Run (tickLogic)

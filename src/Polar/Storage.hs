@@ -27,8 +27,8 @@ class Monad m => StorePolar m where
     retrieveDyn :: TypeRep -> String -> m (Maybe Dynamic)
 
 instance StorePolar Core where
-    storeDyn    dyn k = pure ()
-    retrieveDyn rep k = pure Nothing
+    storeDyn    dyn k = storage . at (dynTypeRep dyn) . non' _Empty . at k ?= dyn
+    retrieveDyn rep k = use (storage . at rep . non' _Empty . at k)
 
 as :: a
 as = undefined

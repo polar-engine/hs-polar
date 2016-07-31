@@ -16,7 +16,6 @@ module Polar.Core.Run (run, loop) where
 import Data.Foldable (traverse_)
 import Control.Monad.RWS (unless, liftIO)
 import Control.Concurrent (threadDelay)
-import Control.Lens.Getter (use)
 import Polar.Types
 import Polar.Core.Config
 import Polar.Log (startupLog, logWrite)

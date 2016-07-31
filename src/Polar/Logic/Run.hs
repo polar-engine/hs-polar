@@ -12,7 +12,6 @@
 
 module Polar.Logic.Run (tickLogic) where
 
-import Control.Lens.Getter (use)
 import Polar.Types
 
 tickLogic :: Logic ()
