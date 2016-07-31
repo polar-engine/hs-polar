@@ -17,7 +17,7 @@ import Control.Monad.RWS (liftIO, tell)
 import qualified Graphics.UI.GLFW as GLFW
 import Polar.Types
 import Polar.Log
-import Polar.Store
+import Polar.Storage
 
 renderer :: System
 renderer = defaultSystem "OpenGL 3.2 Renderer"

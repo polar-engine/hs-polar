@@ -22,6 +22,7 @@ module Polar.Types
 , module Polar.Types.Engine
 , module Polar.Types.Config
 , module Polar.Types.Log
+, module Polar.Types.Storage
 , module Polar.Types.Lenses
 ) where
 
@@ -36,4 +37,5 @@ import Polar.Types.Logic
 import Polar.Types.Engine
 import Polar.Types.Config
 import Polar.Types.Log
+import Polar.Types.Storage
 import Polar.Types.Lenses

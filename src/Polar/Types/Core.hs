@@ -16,6 +16,7 @@ import Control.Monad.RWS (RWST, runRWST)
 import Polar.ConfigFile
 import Polar.Types.Config
 import Polar.Types.Sys
+import Polar.Types.Storage
 
 type CoreEnv = ()
 type CoreOutput = ()
@@ -23,6 +24,7 @@ type CoreOutput = ()
 data CoreState = CoreState
     { _coreStateConfig     :: ConfigParser
     , _coreStateSysState   :: SysState
+    , _coreStateStorage    :: Storage
     , _coreStateShouldExit :: Bool
     }
 
@@ -32,6 +34,7 @@ defaultCoreState :: CoreState
 defaultCoreState = CoreState
     { _coreStateConfig     = defaultConfig
     , _coreStateSysState   = defaultSysState
+    , _coreStateStorage    = defaultStorage
     , _coreStateShouldExit = False
     }
 

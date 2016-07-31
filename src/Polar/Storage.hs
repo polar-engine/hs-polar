@@ -5,16 +5,16 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 {-|
-  Module      : Polar.Store
+  Module      : Polar.Storage
   Copyright   : (c) 2016 David Farrell
   License     : Apache-2.0
   Stability   : unstable
   Portability : portable
 
-  Engine data store.
+  Engine data storage.
 -}
 
-module Polar.Store where
+module Polar.Storage where
 
 import Data.Typeable
 import Data.Dynamic
@@ -43,4 +43,4 @@ retrieve _ k = maybe Nothing fromDynamic <$> retrieveDyn rep k
 forceRetrieve :: forall m a. (MonadIO m, StorePolar m, Typeable a) => a -> String -> m a
 forceRetrieve _ k = maybe (logFatal msg) pure =<< retrieve as k
   where rep = typeRep (Proxy :: Proxy a)
-        msg = "Failed to retrieve value from store (TypeRep = " ++ show rep ++ ", Key = " ++ k ++ ")"
+        msg = "Failed to retrieve value from storage (TypeRep = " ++ show rep ++ ", Key = " ++ k ++ ")"
