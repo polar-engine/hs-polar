@@ -25,11 +25,11 @@ startupConfig :: Core ()
 startupConfig = use config >>= load >>= assign config
   where load cp = loadFileNow "engine.cfg" >>= forceParse . readFromString cp
         forceParse (Left (err, _)) = logFatal ("failed to load config file (" ++ show err ++ ")")
-        forceParse (Right cp) = return cp
+        forceParse (Right cp) = pure cp
 
 class GetConfig a where getConfig :: ConfigProxy a -> SectionName -> OptionName -> Core a
 instance Read a => GetConfig a where getConfig _ s o = (\c -> get c s o) <$> use config >>= forceOption
 
 forceOption :: Either ConfigError a -> Core a
 forceOption (Left (err, _)) = logFatal ("failed to get config option (" ++ show err ++ ")")
-forceOption (Right x) = return x
+forceOption (Right x) = pure x
