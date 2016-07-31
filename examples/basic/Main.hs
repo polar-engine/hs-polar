@@ -1,6 +1,7 @@
 module Main where
 
 import Polar
+import Polar.System.Renderer.OpenGL_3_2
 
 hello :: System
 hello = defaultSystem "Hello"
@@ -13,4 +14,4 @@ quitter = defaultSystem "Quitter"
 
 main :: IO ()
 main = run $ defaultEngine
-    & systems .~ [hello, quitter]
+    & systems .~ [hello, quitter, renderer]
