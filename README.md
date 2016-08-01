@@ -38,8 +38,7 @@ import Polar.Types
 import Polar.Log
 
 hello :: System
-hello = defaultSystem
-    & name     .~ "Hello"
+hello = defaultSystem "Hello"
     & startup  .~ startupF
     & shutdown .~ shutdownF
     & tick     .~ tickF
@@ -62,7 +61,8 @@ import Polar.Run
 import Hello
 
 main :: IO ()
-main = run [hello] []
+main = run $ defaultEngine
+    & systems .~ [hello]
 ```
 
 ### Text Renderer
@@ -88,5 +88,6 @@ import Polar.Run
 import TextRenderer
 
 main :: IO ()
-main = run [textRenderer] []
+main = run $ defaultEngine
+    & systems .~ [textRenderer]
 ```
