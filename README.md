@@ -73,13 +73,12 @@ main = run $ defaultEngine
 module TextRenderer (textRenderer) where
 
 textRenderer :: System
-textRenderer = defaultSystem
-    & name        .~ "TextRenderer"
-    & description .~ "A simple text renderer"
-    & handlers    .~ [H stringH]
+textRenderer = defaultSystem "Text Renderer"
+    & tick .~ tickF
 
-stringH :: Handler String
-stringH s = logWrite INFO ("saw " ++ s)
+tickF :: Sys ()
+tickF = traverse_ f =<< retrieveAll (as :: String)
+  where f s = logWrite INFO ("Saw " ++ s)
 ```
 
 ###### `Main.hs`
