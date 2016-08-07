@@ -20,6 +20,7 @@ import qualified Graphics.Rendering.OpenGL as GL
 import qualified Graphics.UI.GLFW as GLFW
 import Polar.Types
 import Polar.Log
+import Polar.Exit
 import Polar.Storage
 
 renderer :: System
@@ -42,17 +43,26 @@ startupF = do
             logWrite DEBUG "Created window"
             liftIO $ GLFW.makeContextCurrent (Just win)
             store win "window"
-            gl (GL.clearColor $= GL.Color4 0 0 0 0)
+            store (GL.Color4 0 0 0 0 :: GL.Color4 GL.GLfloat) "clear"
 
 tickF :: Core ()
 tickF = do
-    gl (GL.clear [GL.ColorBuffer, GL.DepthBuffer])
-    liftIO . GLFW.swapBuffers =<< forceRetrieve as "window"
-    liftIO GLFW.pollEvents
+    win <- forceRetrieve "window"
+    liftIO (GLFW.windowShouldClose win) >>= \case
+        True  -> exit
+        False -> do
+            GL.Color4 r _ _ _ <- forceRetrieve "clear"
+            let color = GL.Color4 (r + 0.001) 0 0 0
+            gl (GL.clearColor $= color)
+            store color "clear"
+
+            gl (GL.clear [GL.ColorBuffer, GL.DepthBuffer])
+            liftIO (GLFW.swapBuffers win)
+            liftIO GLFW.pollEvents
 
 shutdownF :: Core ()
 shutdownF = do
-    liftIO . GLFW.destroyWindow =<< forceRetrieve as "window"
+    liftIO . GLFW.destroyWindow =<< forceRetrieve "window"
     logWrite DEBUG "Destroyed window"
     liftIO GLFW.terminate
 
