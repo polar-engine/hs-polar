@@ -43,7 +43,7 @@ startupF = do
             logWrite DEBUG "Created window"
             liftIO $ GLFW.makeContextCurrent (Just win)
             store win "window"
-            store (GL.Color4 0 0 0 0 :: GL.Color4 GL.GLfloat) "clear"
+            gl (GL.clearColor $= GL.Color4 0.02 0.05 0.1 0)
 
 tickF :: Core ()
 tickF = do
@@ -51,11 +51,6 @@ tickF = do
     liftIO (GLFW.windowShouldClose win) >>= \case
         True  -> exit
         False -> do
-            GL.Color4 r _ _ _ <- forceRetrieve "clear"
-            let color = GL.Color4 (r + 0.001) 0 0 0
-            gl (GL.clearColor $= color)
-            store color "clear"
-
             gl (GL.clear [GL.ColorBuffer, GL.DepthBuffer])
             liftIO (GLFW.swapBuffers win)
             liftIO GLFW.pollEvents
