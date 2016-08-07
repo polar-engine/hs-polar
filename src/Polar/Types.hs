@@ -26,7 +26,8 @@ module Polar.Types
 , module Polar.Types.Lenses
 ) where
 
-import Control.Lens ((&), (^.), (.~), (.=), (?=), _Empty, use, at, non')
+import Control.Lens ((&), (^.), (.~), (.=), (?=), (%%=))
+import Control.Lens (_Empty, use, preuse, modifying, at, ix, non')
 import Polar.Types.Point
 import Polar.Types.Box
 import Polar.Types.Color

@@ -1,4 +1,4 @@
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Trustworthy #-}
 
 {-|
   Module      : Polar.Types.Storage
@@ -14,9 +14,19 @@ module Polar.Types.Storage where
 
 import Data.Typeable
 import Data.Dynamic
+import qualified Data.Vector as V
 import qualified Data.HashMap.Lazy as M
+import Control.Lens (Lens, Field1, Field2, _1, _2)
 
-type Storage = M.HashMap TypeRep (M.HashMap String Dynamic)
+type InnerStorage = (V.Vector Dynamic, M.HashMap String Int)
+
+innerDyns :: Field1 s t a b => Lens s t a b
+innerDyns = _1
+
+innerNames :: Field2 s t a b => Lens s t a b
+innerNames = _2
+
+type Storage = M.HashMap TypeRep InnerStorage
 
 defaultStorage :: Storage
 defaultStorage = M.empty

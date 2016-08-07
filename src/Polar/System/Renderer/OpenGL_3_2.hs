@@ -48,7 +48,7 @@ startupF = do
         Nothing  -> logFatal "Failed to create window"
         Just win -> do
             logWrite DEBUG "Created window"
-            store win "window"
+            storeNamed win "window"
             liftIO $ GLFW.makeContextCurrent (Just win)
             gl (GL.clearColor $= GL.Color4 0.02 0.05 0.1 0)
             setupVAO
@@ -64,11 +64,12 @@ setupVAO = do
         GL.bufferData GL.ArrayBuffer $= (fromIntegral len, buffer, GL.StaticDraw)
     gl $ GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float 0 nullPtr)
     gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
-    store vao "vao"
+    storeNamed vao "vao"
+    pure ()
 
 tickF :: Core ()
 tickF = do
-    win <- forceRetrieve Proxy "window"
+    win <- forceRetrieveNamed Proxy "window"
     liftIO (GLFW.windowShouldClose win) >>= \case
         True  -> exit
         False -> render win
@@ -76,7 +77,7 @@ tickF = do
 render :: GLFW.Window -> Core ()
 render win = do
     gl (GL.clear [GL.ColorBuffer, GL.DepthBuffer])
-    vao <- forceRetrieve (Proxy :: Proxy GL.VertexArrayObject) "vao"
+    vao <- forceRetrieveNamed (Proxy :: Proxy GL.VertexArrayObject) "vao"
     gl (GL.bindVertexArrayObject $= Just vao)
     gl (GL.drawArrays GL.Triangles 0 (fromIntegral $ length vertices))
     liftIO (GLFW.swapBuffers win)
@@ -84,7 +85,7 @@ render win = do
 
 shutdownF :: Core ()
 shutdownF = do
-    liftIO . GLFW.destroyWindow =<< forceRetrieve Proxy "window"
+    liftIO . GLFW.destroyWindow =<< forceRetrieveNamed Proxy "window"
     logWrite DEBUG "Destroyed window"
     liftIO GLFW.terminate
 
