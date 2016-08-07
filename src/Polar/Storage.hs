@@ -17,8 +17,10 @@ module Polar.Storage
 ( Proxy(..)
 , store,      retrieve,      forceRetrieve
 , storeNamed, retrieveNamed, forceRetrieveNamed
+, retrieveAll
 ) where
 
+import Data.Maybe (maybeToList)
 import Data.Typeable
 import Data.Dynamic
 import qualified Data.Vector as V
@@ -31,6 +33,7 @@ class Monad m => StorePolar m where
     retrieveDyn  :: TypeRep -> Int -> m (Maybe Dynamic)
     storeName    :: Dynamic -> String -> Int -> m ()
     retrieveName :: TypeRep -> String -> m (Maybe Int)
+    retrieveVec  :: TypeRep -> m (V.Vector Dynamic)
 
 instance StorePolar Core where
     storeDyn dyn        = storage . at (dynTypeRep dyn) . non' _Empty . innerDyns %%=
@@ -38,6 +41,7 @@ instance StorePolar Core where
     retrieveDyn rep idx = preuse (storage . at rep . non' _Empty . innerDyns . ix idx)
     storeName dyn k idx = storage . at (dynTypeRep dyn) . non' _Empty . innerNames . at k ?= idx
     retrieveName rep k  = use (storage . at rep . non' _Empty . innerNames . at k)
+    retrieveVec rep     = use (storage . at rep . non' _Empty . innerDyns)
 
 store :: (StorePolar m, Typeable a) => a -> m Int
 store x = storeDyn (toDyn x)
@@ -61,3 +65,6 @@ retrieveNamed proxy k = maybe (pure Nothing) (retrieve proxy) =<< retrieveName (
 forceRetrieveNamed :: (MonadIO m, StorePolar m, Typeable a) => Proxy a -> String -> m a
 forceRetrieveNamed proxy k = maybe (logFatal msg) (forceRetrieve proxy) =<< retrieveName (typeRep proxy) k
   where msg = "Failed to retrieve value from storage (TypeRep = " ++ show (typeRep proxy) ++ ", Key = " ++ k ++ ")"
+
+retrieveAll :: (StorePolar m, Typeable a) => Proxy a -> m [a]
+retrieveAll proxy = foldMap maybeToList . fmap fromDynamic <$> retrieveVec (typeRep proxy)

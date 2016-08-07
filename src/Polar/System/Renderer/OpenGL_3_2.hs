@@ -62,10 +62,9 @@ setupVAO = do
     gl $ withArray vertices $ \buffer -> do
         let len = length vertices * sizeOf (head vertices)
         GL.bufferData GL.ArrayBuffer $= (fromIntegral len, buffer, GL.StaticDraw)
+    store vao
     gl $ GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float 0 nullPtr)
     gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
-    storeNamed vao "vao"
-    pure ()
 
 tickF :: Core ()
 tickF = do
@@ -77,11 +76,14 @@ tickF = do
 render :: GLFW.Window -> Core ()
 render win = do
     gl (GL.clear [GL.ColorBuffer, GL.DepthBuffer])
-    vao <- forceRetrieveNamed (Proxy :: Proxy GL.VertexArrayObject) "vao"
-    gl (GL.bindVertexArrayObject $= Just vao)
-    gl (GL.drawArrays GL.Triangles 0 (fromIntegral $ length vertices))
+    traverse_ renderOne =<< retrieveAll Proxy
     liftIO (GLFW.swapBuffers win)
     liftIO GLFW.pollEvents
+
+renderOne :: GL.VertexArrayObject -> Core ()
+renderOne vao = do
+    gl (GL.bindVertexArrayObject $= Just vao)
+    gl (GL.drawArrays GL.Triangles 0 (fromIntegral $ length vertices))
 
 shutdownF :: Core ()
 shutdownF = do
