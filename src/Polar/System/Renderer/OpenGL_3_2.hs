@@ -15,6 +15,7 @@ module Polar.System.Renderer.OpenGL_3_2 (renderer) where
 
 import Data.Foldable (traverse_)
 import Control.Monad.RWS (MonadIO, liftIO, tell)
+import Foreign (nullPtr, sizeOf, withArray)
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 import qualified Graphics.UI.GLFW as GLFW
@@ -29,6 +30,12 @@ renderer = defaultSystem "OpenGL 3.2 Renderer"
     & tick     .~ tell [SysCoreAction tickF]
     & shutdown .~ tell [SysCoreAction shutdownF]
 
+vertices :: [GL.GLfloat]
+vertices = [ -1, -1
+           ,  1, -1
+           ,  0,  1
+           ]
+
 startupF :: Core ()
 startupF = do
     liftIO $ do
@@ -41,23 +48,44 @@ startupF = do
         Nothing  -> logFatal "Failed to create window"
         Just win -> do
             logWrite DEBUG "Created window"
-            liftIO $ GLFW.makeContextCurrent (Just win)
             store win "window"
+            liftIO $ GLFW.makeContextCurrent (Just win)
             gl (GL.clearColor $= GL.Color4 0.02 0.05 0.1 0)
+            setupVAO
+
+setupVAO :: Core ()
+setupVAO = do
+    vao <- gl GL.genObjectName
+    gl (GL.bindVertexArrayObject $= Just vao)
+    vbo <- gl GL.genObjectName
+    gl (GL.bindBuffer GL.ArrayBuffer $= Just vbo)
+    gl $ withArray vertices $ \buffer -> do
+        let len = length vertices * sizeOf (head vertices)
+        GL.bufferData GL.ArrayBuffer $= (fromIntegral len, buffer, GL.StaticDraw)
+    gl $ GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float 0 nullPtr)
+    gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
+    store vao "vao"
 
 tickF :: Core ()
 tickF = do
-    win <- forceRetrieve "window"
+    win <- forceRetrieve Proxy "window"
     liftIO (GLFW.windowShouldClose win) >>= \case
         True  -> exit
         False -> do
-            gl (GL.clear [GL.ColorBuffer, GL.DepthBuffer])
+            render
             liftIO (GLFW.swapBuffers win)
             liftIO GLFW.pollEvents
 
+render :: Core ()
+render = do
+    gl (GL.clear [GL.ColorBuffer, GL.DepthBuffer])
+    vao <- forceRetrieve (Proxy :: Proxy GL.VertexArrayObject) "vao"
+    gl (GL.bindVertexArrayObject $= Just vao)
+    gl (GL.drawArrays GL.Triangles 0 (fromIntegral $ length vertices))
+
 shutdownF :: Core ()
 shutdownF = do
-    liftIO . GLFW.destroyWindow =<< forceRetrieve "window"
+    liftIO . GLFW.destroyWindow =<< forceRetrieve Proxy "window"
     logWrite DEBUG "Destroyed window"
     liftIO GLFW.terminate
 
