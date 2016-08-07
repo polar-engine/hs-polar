@@ -71,17 +71,16 @@ tickF = do
     win <- forceRetrieve Proxy "window"
     liftIO (GLFW.windowShouldClose win) >>= \case
         True  -> exit
-        False -> do
-            render
-            liftIO (GLFW.swapBuffers win)
-            liftIO GLFW.pollEvents
+        False -> render win
 
-render :: Core ()
-render = do
+render :: GLFW.Window -> Core ()
+render win = do
     gl (GL.clear [GL.ColorBuffer, GL.DepthBuffer])
     vao <- forceRetrieve (Proxy :: Proxy GL.VertexArrayObject) "vao"
     gl (GL.bindVertexArrayObject $= Just vao)
     gl (GL.drawArrays GL.Triangles 0 (fromIntegral $ length vertices))
+    liftIO (GLFW.swapBuffers win)
+    liftIO GLFW.pollEvents
 
 shutdownF :: Core ()
 shutdownF = do
