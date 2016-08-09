@@ -72,12 +72,14 @@ main = run $ defaultEngine
 ```haskell
 module TextRenderer (textRenderer) where
 
+import Data.Foldable (traverse_)
+
 textRenderer :: System
 textRenderer = defaultSystem "Text Renderer"
     & tick .~ tickF
 
 tickF :: Sys ()
-tickF = traverse_ f =<< retrieveAll (as :: String)
+tickF = traverse_ f =<< retrieveAll Proxy
   where f s = logWrite INFO ("Saw " ++ s)
 ```
 
