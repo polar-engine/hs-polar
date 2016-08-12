@@ -25,17 +25,13 @@ import Polar.Log
 import Polar.Exit
 import Polar.Storage
 
+type Drawable = (GL.VertexArrayObject, Int)
+
 renderer :: System
 renderer = defaultSystem "OpenGL 3.2 Renderer"
     & startup  .~ tell [SysCoreAction startupF]
     & tick     .~ tell [SysCoreAction tickF]
     & shutdown .~ tell [SysCoreAction shutdownF]
-
-vertices :: [GL.GLfloat]
-vertices = [ -1, -1
-           ,  1, -1
-           ,  0,  1
-           ]
 
 startupF :: Core ()
 startupF = do
@@ -52,10 +48,14 @@ startupF = do
             storeNamed win "window"
             liftIO $ GLFW.makeContextCurrent (Just win)
             gl (GL.clearColor $= GL.Color4 0.02 0.05 0.1 0)
-            setupVAO
+            store =<< createDrawable [ -1, -1
+                                     ,  1, -1
+                                     ,  0,  1
+                                     ]
+            pure ()
 
-setupVAO :: Core ()
-setupVAO = do
+createDrawable :: [GL.GLfloat] -> Core Drawable
+createDrawable vertices = do
     vao <- gl GL.genObjectName
     gl (GL.bindVertexArrayObject $= Just vao)
     vbo <- gl GL.genObjectName
@@ -63,9 +63,9 @@ setupVAO = do
     gl $ withArray vertices $ \buffer -> do
         let len = length vertices * sizeOf (head vertices)
         GL.bufferData GL.ArrayBuffer $= (fromIntegral len, buffer, GL.StaticDraw)
-    store vao
     gl $ GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float 0 nullPtr)
     gl $ GL.vertexAttribArray   (GL.AttribLocation 0) $= GL.Enabled
+    pure (vao, length vertices)
 
 tickF :: Core ()
 tickF = do
@@ -79,10 +79,10 @@ render win = do
     liftIO (GLFW.swapBuffers win)
     liftIO GLFW.pollEvents
 
-renderOne :: GL.VertexArrayObject -> Core ()
-renderOne vao = do
+renderOne :: Drawable-> Core ()
+renderOne (vao, n) = do
     gl (GL.bindVertexArrayObject $= Just vao)
-    gl (GL.drawArrays GL.Triangles 0 (fromIntegral $ length vertices))
+    gl (GL.drawArrays GL.Triangles 0 (fromIntegral n))
 
 shutdownF :: Core ()
 shutdownF = do
