@@ -69,13 +69,13 @@ setupVAO = do
 
 tickF :: Core ()
 tickF = do
-    win <- forceRetrieveNamed Proxy "window"
+    win <- retrieveNamed "window"
     bool (render win) exit =<< liftIO (GLFW.windowShouldClose win)
 
 render :: GLFW.Window -> Core ()
 render win = do
     gl (GL.clear [GL.ColorBuffer, GL.DepthBuffer])
-    traverse_ renderOne =<< retrieveAll Proxy
+    traverse_ renderOne =<< retrieveAll
     liftIO (GLFW.swapBuffers win)
     liftIO GLFW.pollEvents
 
@@ -86,7 +86,7 @@ renderOne vao = do
 
 shutdownF :: Core ()
 shutdownF = do
-    liftIO . GLFW.destroyWindow =<< forceRetrieveNamed Proxy "window"
+    liftIO . GLFW.destroyWindow =<< retrieveNamed "window"
     logWrite DEBUG "Destroyed window"
     liftIO GLFW.terminate
 
