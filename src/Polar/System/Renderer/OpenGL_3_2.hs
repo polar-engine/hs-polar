@@ -65,7 +65,7 @@ setupVAO = do
         GL.bufferData GL.ArrayBuffer $= (fromIntegral len, buffer, GL.StaticDraw)
     store vao
     gl $ GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float 0 nullPtr)
-    gl $ GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
+    gl $ GL.vertexAttribArray   (GL.AttribLocation 0) $= GL.Enabled
 
 tickF :: Core ()
 tickF = do
