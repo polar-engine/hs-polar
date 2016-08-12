@@ -27,6 +27,7 @@ library
                        Polar.Sys.Run,
                        Polar.Logic.Run,
                        Polar.System.Renderer.OpenGL_3_2,
+                       Polar.Shader.Compiler.GLSL150,
                        Polar.Types,
                        Polar.Types.Core,
                        Polar.Types.Sys,

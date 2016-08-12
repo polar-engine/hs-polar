@@ -15,7 +15,9 @@ module Polar.System.Renderer.OpenGL_3_2 (renderer) where
 
 import Data.Bool (bool)
 import Data.Foldable (traverse_)
-import Control.Monad.RWS (MonadIO, liftIO, tell)
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.Map as M
+import Control.Monad.RWS (MonadIO, void, liftIO, tell)
 import Foreign (nullPtr, sizeOf, withArray)
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
@@ -24,6 +26,9 @@ import Polar.Types
 import Polar.Log
 import Polar.Exit
 import Polar.Storage
+import Polar.Shader (compile)
+import Polar.Shader.Types
+import Polar.Shader.Compiler.GLSL150 (GLSL150(..))
 
 type Drawable = (GL.VertexArrayObject, Int)
 
@@ -48,11 +53,46 @@ startupF = do
             storeNamed win "window"
             liftIO $ GLFW.makeContextCurrent (Just win)
             gl (GL.clearColor $= GL.Color4 0.02 0.05 0.1 0)
-            store =<< createDrawable [ -1, -1
+            program <- createProgram "main.shader"
+            gl (GL.currentProgram $= Just program)
+            void $ store =<< createDrawable [ -1, -1
                                      ,  1, -1
                                      ,  0,  1
                                      ]
-            pure ()
+
+createProgram :: String -> Core GL.Program
+createProgram path = f <$> liftIO (readFile path) >>= \case
+    Right (vertex, pixel) -> do
+        vsh <- createGLShader vertex GL.VertexShader
+        fsh <- createGLShader pixel GL.FragmentShader
+        createGLProgram [vsh, fsh]
+    Left err -> logFatal ("Failed to create program: " ++ err)
+  where f contents = compile contents
+            (M.fromList [("projection", DataMatrix4x4)])
+            (M.fromList [("vertex", DataFloat2)])
+            (M.fromList [("color", DataFloat4)]) GLSL150
+
+createGLShader :: String -> GL.ShaderType -> Core GL.Shader
+createGLShader src ty = do
+    shader <- gl (GL.createShader ty)
+    gl (GL.shaderSourceBS shader $= BS.pack src)
+    gl (GL.compileShader shader)
+    gl (GL.get $ GL.compileStatus shader) >>= \case
+        True  -> pure shader
+        False -> do
+            log <- gl (GL.get $ GL.shaderInfoLog shader)
+            logFatal ("Failed to create shader:\n" ++ log)
+
+createGLProgram :: [GL.Shader] -> Core GL.Program
+createGLProgram shaders = do
+    program <- gl GL.createProgram
+    gl (GL.attachedShaders program $= shaders)
+    gl (GL.linkProgram program)
+    gl (GL.get $ GL.linkStatus program) >>= \case
+        True  -> pure program
+        False -> do
+            log <- gl (GL.get $ GL.programInfoLog program)
+            logFatal ("Failed to create program:\n" ++ log)
 
 createDrawable :: [GL.GLfloat] -> Core Drawable
 createDrawable vertices = do
