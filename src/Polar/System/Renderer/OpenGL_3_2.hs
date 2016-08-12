@@ -56,9 +56,9 @@ startupF = do
             program <- createProgram "main.shader"
             gl (GL.currentProgram $= Just program)
             void $ store =<< createDrawable [ -1, -1
-                                     ,  1, -1
-                                     ,  0,  1
-                                     ]
+                                            ,  1, -1
+                                            ,  0,  1
+                                            ]
 
 createProgram :: String -> Core GL.Program
 createProgram path = f <$> liftIO (readFile path) >>= \case
