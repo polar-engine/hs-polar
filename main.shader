@@ -1,6 +1,5 @@
 vertex {
-	newPos := vertex -10 1
-	position = projection * newPos
+	position = vertex 0 1
 }
 
 pixel {
