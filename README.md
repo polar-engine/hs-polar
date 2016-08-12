@@ -79,7 +79,7 @@ textRenderer = defaultSystem "Text Renderer"
     & tick .~ tickF
 
 tickF :: Sys ()
-tickF = traverse_ f =<< retrieveAll Proxy
+tickF = traverse_ f =<< retrieveAll
   where f s = logWrite INFO ("Saw " ++ s)
 ```
 
