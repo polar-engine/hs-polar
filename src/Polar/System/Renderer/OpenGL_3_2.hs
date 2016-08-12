@@ -119,7 +119,7 @@ render win = do
     liftIO (GLFW.swapBuffers win)
     liftIO GLFW.pollEvents
 
-renderOne :: Drawable-> Core ()
+renderOne :: Drawable -> Core ()
 renderOne (vao, n) = do
     gl (GL.bindVertexArrayObject $= Just vao)
     gl (GL.drawArrays GL.Triangles 0 (fromIntegral n))
