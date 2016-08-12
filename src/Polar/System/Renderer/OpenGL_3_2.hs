@@ -13,6 +13,7 @@
 
 module Polar.System.Renderer.OpenGL_3_2 (renderer) where
 
+import Data.Bool (bool)
 import Data.Foldable (traverse_)
 import Control.Monad.RWS (MonadIO, liftIO, tell)
 import Foreign (nullPtr, sizeOf, withArray)
@@ -69,9 +70,7 @@ setupVAO = do
 tickF :: Core ()
 tickF = do
     win <- forceRetrieveNamed Proxy "window"
-    liftIO (GLFW.windowShouldClose win) >>= \case
-        True  -> exit
-        False -> render win
+    bool (render win) exit =<< liftIO (GLFW.windowShouldClose win)
 
 render :: GLFW.Window -> Core ()
 render win = do
