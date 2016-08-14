@@ -54,8 +54,8 @@ instance StorePolar Core where
 
     retrieveKey :: TypeRep -> Int -> TypeRep -> Core (Maybe Int)
     retrieveKey keyRep hsh rep = use $ storage . at rep    . non' _Empty
-                                         . keys    . at keyRep . non' _Empty
-                                         . at hsh
+                                     . keys    . at keyRep . non' _Empty
+                                     . at hsh
 
     retrieveVec rep = use (storage.at rep.non' _Empty.dyns)
 
