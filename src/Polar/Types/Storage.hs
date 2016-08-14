@@ -16,15 +16,20 @@ import Data.Typeable
 import Data.Dynamic
 import qualified Data.Vector as V
 import qualified Data.HashMap.Lazy as M
-import Control.Lens (Lens, Field1, Field2, _1, _2)
 
-type InnerStorage = (V.Vector Dynamic, M.HashMap String Int)
+data InnerStorage = InnerStorage
+    { _innerStorageDyns  :: V.Vector Dynamic
+    , _innerStorageNames :: M.HashMap String Int
+    }
 
-innerDyns :: Field1 s t a b => Lens s t a b
-innerDyns = _1
+defaultInnerStorage :: InnerStorage
+defaultInnerStorage = InnerStorage
+    { _innerStorageDyns  = V.empty
+    , _innerStorageNames = M.empty
+    }
 
-innerNames :: Field2 s t a b => Lens s t a b
-innerNames = _2
+innerStorageNull :: InnerStorage -> Bool
+innerStorageNull s = V.null (_innerStorageDyns s)
 
 type Storage = M.HashMap TypeRep InnerStorage
 
