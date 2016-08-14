@@ -50,7 +50,7 @@ startupF = do
         Nothing  -> logFatal "Failed to create window"
         Just win -> do
             logWrite DEBUG "Created window"
-            storeNamed win "window"
+            storeKeyed win "window"
             liftIO $ GLFW.makeContextCurrent (Just win)
             gl (GL.clearColor $= GL.Color4 0.02 0.05 0.1 0)
             program <- createProgram "main.shader"
@@ -109,7 +109,7 @@ createDrawable vertices = do
 
 tickF :: Core ()
 tickF = do
-    win <- retrieveNamed "window"
+    win <- retrieveKeyed "window"
     bool (render win) exit =<< liftIO (GLFW.windowShouldClose win)
 
 render :: GLFW.Window -> Core ()
@@ -126,7 +126,7 @@ renderOne (vao, n) = do
 
 shutdownF :: Core ()
 shutdownF = do
-    liftIO . GLFW.destroyWindow =<< retrieveNamed "window"
+    liftIO . GLFW.destroyWindow =<< retrieveKeyed "window"
     logWrite DEBUG "Destroyed window"
     liftIO GLFW.terminate
 
