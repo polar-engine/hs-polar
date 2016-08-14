@@ -4,7 +4,6 @@ cache:
   directories:
     - $HOME/.ghc
     - $HOME/.cabal
-    - dist
 
 matrix:
   include:
