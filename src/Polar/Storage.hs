@@ -38,12 +38,12 @@ class Monad m => StorePolar m where
     retrieveVec  :: TypeRep -> m (V.Vector Dynamic)
 
 instance StorePolar Core where
-    storeDyn dyn        = storage . at (dynTypeRep dyn) . non' _Empty . innerDyns %%=
+    storeDyn dyn        = storage . at (dynTypeRep dyn) . non' _Empty . dyns %%=
         \v -> (V.length v, v `V.snoc` dyn)
-    retrieveDyn rep idx = preuse (storage . at rep . non' _Empty . innerDyns . ix idx)
-    storeName dyn k idx = storage . at (dynTypeRep dyn) . non' _Empty . innerNames . at k ?= idx
-    retrieveName rep k  = use (storage . at rep . non' _Empty . innerNames . at k)
-    retrieveVec rep     = use (storage . at rep . non' _Empty . innerDyns)
+    retrieveDyn rep idx = preuse (storage . at rep . non' _Empty . dyns . ix idx)
+    storeName dyn k idx = storage . at (dynTypeRep dyn) . non' _Empty . names . at k ?= idx
+    retrieveName rep k  = use (storage . at rep . non' _Empty . names . at k)
+    retrieveVec rep     = use (storage . at rep . non' _Empty . dyns)
 
 -- store functions
 
