@@ -13,11 +13,15 @@
 module Polar.Run (run) where
 
 import Control.Monad (void)
+import Control.Concurrent.STM (atomically)
+import Control.Concurrent.STM.TChan
 import Polar.Types
 import qualified Polar.Core.Run as C (run)
 
 -- |Run the engine using the given initial state.
 run :: Engine -> IO ()
-run engine = void $ runCore C.run () $ defaultCoreState
-    & sysState.logicState.tickFunctions .~ engine^.logicTicks
-    & sysState.systems                  .~ engine^.systems
+run engine = do
+    chan <- atomically newTChan
+    void $ runCore C.run () $ defaultCoreState chan
+        & sysState.logicState.tickFunctions .~ engine^.logicTicks
+        & sysState.systems                  .~ engine^.systems

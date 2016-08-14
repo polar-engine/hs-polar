@@ -19,6 +19,8 @@ module Polar.Storage
 , store, storeKeyed
 , mRetrieveP, mRetrieveKeyedP, retrieveP, retrieveKeyedP, retrieveAllP
 , mRetrieve,  mRetrieveKeyed,  retrieve,  retrieveKeyed,  retrieveAll
+, storeMsg, storeKeyedMsg
+, storeDyn, retrieveDyn, storeKey, retrieveKey
 ) where
 
 import Data.Maybe (maybeToList)
@@ -35,8 +37,8 @@ import Polar.Log
 class Monad m => StorePolar m where
     storeDyn     :: Dynamic -> m Int
     retrieveDyn  :: TypeRep -> Int -> m (Maybe Dynamic)
-    storeName    :: (Typeable k, Hashable k) => Dynamic -> k -> Int -> m ()
-    retrieveName :: (Typeable k, Hashable k) => TypeRep -> k -> m (Maybe Int)
+    storeKey     :: TypeRep -> Int -> TypeRep -> Int -> m ()
+    retrieveKey  :: TypeRep -> Int -> TypeRep -> m (Maybe Int)
     retrieveVec  :: TypeRep -> m (V.Vector Dynamic)
 
 instance StorePolar Core where
@@ -45,17 +47,15 @@ instance StorePolar Core where
 
     retrieveDyn rep idx = preuse (storage.at rep.non' _Empty.dyns.ix idx)
 
-    storeName :: forall k. (Typeable k, Hashable k) => Dynamic -> k -> Int -> Core ()
-    storeName dyn key idx = storage . at (dynTypeRep dyn) . non' _Empty
-                          . keys    . at (typeRep p)      . non' _Empty
-                          . at (hash key) ?= idx
-      where p = Proxy :: Proxy k
+    storeKey :: TypeRep -> Int -> TypeRep -> Int -> Core ()
+    storeKey keyRep hsh rep idx = storage . at rep    . non' _Empty
+                                . keys    . at keyRep . non' _Empty
+                                . at hsh ?= idx
 
-    retrieveName :: forall k. (Typeable k, Hashable k) => TypeRep -> k -> Core (Maybe Int)
-    retrieveName rep key = use $ storage . at rep         . non' _Empty
-                               . keys    . at (typeRep p) . non' _Empty
-                               . at (hash key)
-      where p = Proxy :: Proxy k
+    retrieveKey :: TypeRep -> Int -> TypeRep -> Core (Maybe Int)
+    retrieveKey keyRep hsh rep = use $ storage . at rep    . non' _Empty
+                                         . keys    . at keyRep . non' _Empty
+                                         . at hsh
 
     retrieveVec rep = use (storage.at rep.non' _Empty.dyns)
 
@@ -64,11 +64,12 @@ instance StorePolar Core where
 store :: (StorePolar m, Typeable a) => a -> m Int
 store x = storeDyn (toDyn x)
 
-storeKeyed :: (StorePolar m, Typeable a, Typeable k, Hashable k)
-           => a -> k -> m Int
-storeKeyed x key = do
+storeKeyed :: forall m a k. (StorePolar m, Typeable a, Typeable k, Hashable k)
+           => k -> a -> m Int
+storeKeyed key x = do
     i <- store x
-    storeName (toDyn x) key i
+    storeKey (typeRep (Proxy :: Proxy k)) (hash key)
+             (typeRep (Proxy :: Proxy a)) i
     pure i
 
 -- explicit proxy functions
@@ -76,17 +77,21 @@ storeKeyed x key = do
 mRetrieveP :: (StorePolar m, Typeable a) => Proxy a -> Int -> m (Maybe a)
 mRetrieveP proxy idx = maybe Nothing fromDynamic <$> retrieveDyn (typeRep proxy) idx
 
-mRetrieveKeyedP :: (StorePolar m, Typeable a, Typeable k, Hashable k)
-                => Proxy a -> k -> m (Maybe a)
-mRetrieveKeyedP proxy key = maybe (pure Nothing) (mRetrieveP proxy) =<< retrieveName (typeRep proxy) key
+mRetrieveKeyedP :: forall m a k. (StorePolar m, Typeable a, Typeable k, Hashable k)
+                => k -> Proxy a -> m (Maybe a)
+mRetrieveKeyedP key proxy = do
+    mVal <- retrieveKey (typeRep (Proxy :: Proxy k)) (hash key) (typeRep proxy)
+    maybe (pure Nothing) (mRetrieveP proxy) mVal
 
 retrieveP :: (MonadIO m, StorePolar m, Typeable a) => Proxy a -> Int -> m a
 retrieveP proxy idx = maybe (logFatal msg) pure =<< mRetrieveP proxy idx
   where msg = "Failed to retrieve value from storage (TypeRep = " ++ show (typeRep proxy) ++ ", Index = " ++ show idx ++ ")"
 
-retrieveKeyedP :: (MonadIO m, StorePolar m, Typeable a, Typeable k, Hashable k)
-               => Proxy a -> k -> m a
-retrieveKeyedP proxy key = maybe (logFatal msg) (retrieveP proxy) =<< retrieveName (typeRep proxy) key
+retrieveKeyedP :: forall m a k. (MonadIO m, StorePolar m, Typeable a, Typeable k, Hashable k)
+               => k -> Proxy a -> m a
+retrieveKeyedP key proxy = do
+    mVal <- retrieveKey (typeRep (Proxy :: Proxy k)) (hash key) (typeRep proxy)
+    maybe (logFatal msg) (retrieveP proxy) mVal
   where msg = "Failed to retrieve value from storage (TypeRep = " ++ show (typeRep proxy) ++ ", Key = " ++ show (hash key) ++ ")"
 
 retrieveAllP :: (StorePolar m, Typeable a) => Proxy a -> m [a]
@@ -99,14 +104,23 @@ mRetrieve = mRetrieveP Proxy
 
 mRetrieveKeyed :: (StorePolar m, Typeable a, Typeable k, Hashable k)
                => k -> m (Maybe a)
-mRetrieveKeyed = mRetrieveKeyedP Proxy
+mRetrieveKeyed key = mRetrieveKeyedP key Proxy
 
 retrieve :: (MonadIO m, StorePolar m, Typeable a) => Int -> m a
 retrieve = retrieveP Proxy
 
 retrieveKeyed :: (MonadIO m, StorePolar m, Typeable a, Typeable k, Hashable k)
               => k -> m a
-retrieveKeyed = retrieveKeyedP Proxy
+retrieveKeyed key = retrieveKeyedP key Proxy
 
 retrieveAll :: (StorePolar m, Typeable a) => m [a]
 retrieveAll = retrieveAllP Proxy
+
+-- msg functions
+
+storeMsg :: Typeable a => a -> CoreMsg
+storeMsg x = CoreStoreMsg Nothing (toDyn x)
+
+storeKeyedMsg :: forall a k. (Typeable a, Typeable k, Hashable k) => k -> a -> CoreMsg
+storeKeyedMsg key x = CoreStoreMsg (Just (rep, hash key)) (toDyn x)
+  where rep = typeRep (Proxy :: Proxy k)

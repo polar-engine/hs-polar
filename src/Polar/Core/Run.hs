@@ -14,10 +14,14 @@
 module Polar.Core.Run (run, loop) where
 
 import Data.Foldable (traverse_)
-import Control.Monad.RWS (unless, liftIO)
+import Data.Dynamic
+import Control.Monad.RWS (void, unless, liftIO)
 import Control.Concurrent (threadDelay)
+import Control.Concurrent.STM (atomically)
+import Control.Concurrent.STM.TChan
 import Polar.Types
 import Polar.Core.Config
+import Polar.Storage
 import Polar.Log (startupLog, logWrite)
 import Polar.Exit (exit)
 import Polar.Sys.Run
@@ -36,10 +40,16 @@ startupCore = do
 
 loop :: Core ()
 loop = do
+    handleMsgs
     (_, _, sysActs) <- runSys tickSys () <$> use sysState
     traverse_ runSysAction sysActs
     liftIO . threadDelay . fromInteger =<< getConfig integerOption "Core" "TimeToSleep"
     flip unless loop =<< use shouldExit
+
+handleMsgs :: Core ()
+handleMsgs = use msgQueue >>= liftIO . atomically . tryReadTChan >>= \case
+    Nothing -> pure ()
+    Just msg -> handleMsg msg *> handleMsgs
 
 shutdownCore :: Core ()
 shutdownCore = do
@@ -47,6 +57,10 @@ shutdownCore = do
     traverse_ runSysAction sysActs
     logWrite DEBUG "Shutting down Log"
     logWrite DEBUG "Shutting down Config"
+
+handleMsg :: CoreMsg -> Core ()
+handleMsg (CoreStoreMsg Nothing x)         = void (store x)
+handleMsg (CoreStoreMsg (Just (rep, h)) x) = storeKey rep h (dynTypeRep x) =<< storeDyn x
 
 runSysAction :: SysAction -> Core ()
 runSysAction SysExitAction = exit
