@@ -24,7 +24,7 @@ makeFields ''SysState
 makeFields ''System
 makeFields ''LogicState
 makeFields ''Engine
-makeFields ''InnerStorage
+makeFields ''VectorStorage
 
-instance AsEmpty InnerStorage where
-    _Empty = nearly defaultInnerStorage innerStorageNull
+instance AsEmpty VectorStorage where
+    _Empty = nearly defaultVectorStorage vectorStorageNull
