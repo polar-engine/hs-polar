@@ -17,21 +17,21 @@ import Data.Dynamic
 import qualified Data.Vector as V
 import qualified Data.HashMap.Lazy as M
 
-data InnerStorage = InnerStorage
-    { _innerStorageDyns  :: V.Vector Dynamic
-    , _innerStorageNames :: M.HashMap String Int
+data VectorStorage = VectorStorage
+    { _vectorStorageDyns  :: V.Vector Dynamic
+    , _vectorStorageNames :: M.HashMap String Int
     }
 
-defaultInnerStorage :: InnerStorage
-defaultInnerStorage = InnerStorage
-    { _innerStorageDyns  = V.empty
-    , _innerStorageNames = M.empty
+defaultVectorStorage :: VectorStorage
+defaultVectorStorage = VectorStorage
+    { _vectorStorageDyns  = V.empty
+    , _vectorStorageNames = M.empty
     }
 
-innerStorageNull :: InnerStorage -> Bool
-innerStorageNull s = V.null (_innerStorageDyns s)
+vectorStorageNull :: VectorStorage -> Bool
+vectorStorageNull s = V.null (_vectorStorageDyns s)
 
-type Storage = M.HashMap TypeRep InnerStorage
+type Storage = M.HashMap TypeRep VectorStorage
 
 defaultStorage :: Storage
 defaultStorage = M.empty
