@@ -38,7 +38,7 @@ library
                        Polar.Types.Storage,
                        Polar.Types.Lenses
   build-depends:       base >=4.8 && <5.0, containers >=0.5.5, transformers >=0.4, mtl >=2.2, bytestring >=0.10, lens >=4.12,
-                       hint >=0.4, unordered-containers >=0.2, vector >=0.11, hashable >=1.2,
+                       hint >=0.4, unordered-containers >=0.2, vector >=0.11, hashable >=1.2, stm >=2.4,
                        OpenGL >=2.12, OpenGLRaw >2.1, GLFW-b >=1.4.7,
                        tight-apply >=0.1 && <0.2, truthful >=0.1 && <0.2,
                        polar-shader >=0.1 && <0.2, polar-configfile >=0.5

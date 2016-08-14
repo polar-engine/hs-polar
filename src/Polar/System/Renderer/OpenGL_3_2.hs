@@ -15,9 +15,12 @@ module Polar.System.Renderer.OpenGL_3_2 (renderer) where
 
 import Data.Bool (bool)
 import Data.Foldable (traverse_)
+import Data.Hashable (Hashable)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as M
-import Control.Monad.RWS (MonadIO, void, liftIO, tell)
+import Control.Monad.RWS (MonadIO, void, when, liftIO, tell)
+import Control.Concurrent.STM (atomically)
+import Control.Concurrent.STM.TChan
 import Foreign (nullPtr, sizeOf, withArray)
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
@@ -30,6 +33,7 @@ import Polar.Shader (compile)
 import Polar.Shader.Types
 import Polar.Shader.Compiler.GLSL150 (GLSL150(..))
 
+instance Hashable GLFW.Key
 type Drawable = (GL.VertexArrayObject, Int)
 
 renderer :: System
@@ -50,15 +54,43 @@ startupF = do
         Nothing  -> logFatal "Failed to create window"
         Just win -> do
             logWrite DEBUG "Created window"
-            storeKeyed win "window"
+            storeKeyed "window" win
+            chan <- use msgQueue
+            liftIO $ GLFW.setKeyCallback win (Just (keyCB chan))
             liftIO $ GLFW.makeContextCurrent (Just win)
-            gl (GL.clearColor $= GL.Color4 0.02 0.05 0.1 0)
             program <- createProgram "main.shader"
             gl (GL.currentProgram $= Just program)
+            gl (GL.clearColor $= GL.Color4 0.02 0.05 0.1 0)
             void $ store =<< createDrawable [ -1, -1
                                             ,  1, -1
                                             ,  0,  1
                                             ]
+
+tickF :: Core ()
+tickF = do
+    win <- retrieveKeyed "window"
+    bool (render win) exit =<< liftIO (GLFW.windowShouldClose win)
+    mRetrieveKeyed GLFW.Key'Escape >>= \case
+        Just True -> exit
+        _         -> pure ()
+
+render :: GLFW.Window -> Core ()
+render win = do
+    gl (GL.clear [GL.ColorBuffer, GL.DepthBuffer])
+    traverse_ renderOne =<< retrieveAll
+    liftIO (GLFW.swapBuffers win)
+    liftIO GLFW.pollEvents
+
+renderOne :: Drawable -> Core ()
+renderOne (vao, n) = do
+    gl (GL.bindVertexArrayObject $= Just vao)
+    gl (GL.drawArrays GL.Triangles 0 (fromIntegral n))
+
+shutdownF :: Core ()
+shutdownF = do
+    liftIO . GLFW.destroyWindow =<< retrieveKeyed "window"
+    logWrite DEBUG "Destroyed window"
+    liftIO GLFW.terminate
 
 createProgram :: String -> Core GL.Program
 createProgram path = f <$> liftIO (readFile path) >>= \case
@@ -107,28 +139,9 @@ createDrawable vertices = do
     gl $ GL.vertexAttribArray   (GL.AttribLocation 0) $= GL.Enabled
     pure (vao, length vertices)
 
-tickF :: Core ()
-tickF = do
-    win <- retrieveKeyed "window"
-    bool (render win) exit =<< liftIO (GLFW.windowShouldClose win)
-
-render :: GLFW.Window -> Core ()
-render win = do
-    gl (GL.clear [GL.ColorBuffer, GL.DepthBuffer])
-    traverse_ renderOne =<< retrieveAll
-    liftIO (GLFW.swapBuffers win)
-    liftIO GLFW.pollEvents
-
-renderOne :: Drawable -> Core ()
-renderOne (vao, n) = do
-    gl (GL.bindVertexArrayObject $= Just vao)
-    gl (GL.drawArrays GL.Triangles 0 (fromIntegral n))
-
-shutdownF :: Core ()
-shutdownF = do
-    liftIO . GLFW.destroyWindow =<< retrieveKeyed "window"
-    logWrite DEBUG "Destroyed window"
-    liftIO GLFW.terminate
+keyCB :: TChan CoreMsg -> GLFW.KeyCallback
+keyCB chan _ key _ act _ = liftIO $ atomically (writeTChan chan msg)
+  where msg = storeKeyedMsg key True
 
 gl :: (MonadIO m, LogPolar m) => IO a -> m a
 gl io = do
