@@ -3,6 +3,7 @@
 *.o
 *.hi
 .cabal-sandbox
+.stack-work
 cabal.sandbox.config
 dist
 engine.cfg
