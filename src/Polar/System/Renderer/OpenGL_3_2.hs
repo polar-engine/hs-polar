@@ -18,7 +18,7 @@ import Data.Foldable (traverse_)
 import Data.Hashable (Hashable)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as M
-import Control.Monad.RWS (MonadIO, void, when, liftIO, tell)
+import Control.Monad.RWS (MonadIO, void, liftIO, tell)
 import Control.Concurrent.STM (atomically)
 import Control.Concurrent.STM.TChan
 import Foreign (nullPtr, sizeOf, withArray)
