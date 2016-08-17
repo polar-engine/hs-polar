@@ -1,0 +1,7 @@
+flags: {}
+packages:
+- '.'
+extra-deps:
+- polar-configfile-0.5.0.0
+- polar-shader-0.1.0.4
+resolver: lts-6.12
