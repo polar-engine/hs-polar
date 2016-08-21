@@ -21,13 +21,14 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Concurrent.STM (atomically)
 import Control.Concurrent.STM.TChan
 import GHC.Generics
+import Polar.Types
 import Polar.Storage
 import Polar.Unique
 
 data RendererKey = RendererKey deriving Generic
 instance Hashable RendererKey
 
-submitPrimitive :: (MonadIO m, StorePolar m) => () -> m Integer
+submitPrimitive :: (MonadIO m, StorePolar m) => Primitive -> m Integer
 submitPrimitive x = do
     uid <- unique
     chan <- mRetrieveKeyed RendererKey >>= \case
@@ -39,7 +40,7 @@ submitPrimitive x = do
     liftIO $ atomically (writeTChan chan (uid, x))
     pure uid
 
-readRendererMsg :: (MonadIO m, StorePolar m) => m (Maybe (Integer, ()))
+readRendererMsg :: (MonadIO m, StorePolar m) => m (Maybe (Integer, Primitive))
 readRendererMsg = do
     mRetrieveKeyed RendererKey >>= \case
         Nothing   -> pure Nothing
