@@ -9,13 +9,14 @@
   Copyright   : (c) 2016 David Farrell
   License     : Apache-2.0
   Stability   : unstable
-  Portability : portable
+  Portability : non-portable (GHC extensions)
 
   Engine data storage.
 -}
 
 module Polar.Storage
 ( Proxy(..)
+, StorePolar
 , store, storeKeyed
 , mRetrieveP, mRetrieveKeyedP, retrieveP, retrieveKeyedP, retrieveAllP
 , mRetrieve,  mRetrieveKeyed,  retrieve,  retrieveKeyed,  retrieveAll
