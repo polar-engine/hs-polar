@@ -34,6 +34,7 @@ tellCurrent msg = get >>= \case
 showDataType :: DataType -> String
 showDataType DataFloat     = "float"
 showDataType DataFloat2    = "vec2"
+showDataType DataFloat3    = "vec3"
 showDataType DataFloat4    = "vec4"
 showDataType DataMatrix4x4 = "mat4x4"
 

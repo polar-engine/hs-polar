@@ -1,5 +1,5 @@
 vertex {
-	position = vertex 0 1
+	position = vertex 1
 }
 
 pixel {
