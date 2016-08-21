@@ -24,6 +24,7 @@ import Control.Concurrent.STM.TChan
 import Foreign (nullPtr, sizeOf, withArray)
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
+import qualified Graphics.GL.Core32 as GL
 import qualified Graphics.UI.GLFW as GLFW
 import Polar.Types
 import Polar.Log
@@ -36,6 +37,15 @@ import Polar.Shader.Compiler.GLSL150 (GLSL150(..))
 
 instance Hashable GLFW.Key
 type Drawable = (GL.VertexArrayObject, Int)
+
+projection :: Floating a => a -> a -> a -> [a]
+projection fov zNear zFar = [ s, 0, 0,                    0
+                            , 0, s, 0,                    0
+                            , 0, 0, negFarLimit,         -1
+                            , 0, 0, negFarLimit * zNear,  1
+                            ]
+  where s = recip $ tan (fov * 0.5 * pi / 180.0)
+        negFarLimit = zFar / (zFar - zNear)
 
 renderer :: System
 renderer = defaultSystem "OpenGL 3.2 Renderer"
@@ -61,6 +71,9 @@ startupF = do
             liftIO $ GLFW.makeContextCurrent (Just win)
             program <- createProgram "main.shader"
             gl (GL.currentProgram $= Just program)
+            GL.UniformLocation loc <- gl (GL.uniformLocation program "u_projection")
+            gl $ withArray (projection 70 1 1000) $ \buffer ->
+                GL.glUniformMatrix4fv loc 1 0 buffer
             gl (GL.clearColor $= GL.Color4 0.02 0.05 0.1 0)
 
 tickF :: Core ()
