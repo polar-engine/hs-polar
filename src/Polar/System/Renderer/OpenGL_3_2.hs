@@ -29,6 +29,7 @@ import Polar.Types
 import Polar.Log
 import Polar.Exit
 import Polar.Storage
+import Polar.System.Renderer
 import Polar.Shader (compile)
 import Polar.Shader.Types
 import Polar.Shader.Compiler.GLSL150 (GLSL150(..))
@@ -77,6 +78,9 @@ tickF = do
 render :: GLFW.Window -> Core ()
 render win = do
     gl (GL.clear [GL.ColorBuffer, GL.DepthBuffer])
+    readRendererMsg >>= \case
+        Nothing -> pure ()
+        Just m  -> logWrite TRACE ("Received renderer message: " ++ show m)
     traverse_ renderOne =<< retrieveAll
     liftIO (GLFW.swapBuffers win)
     liftIO GLFW.pollEvents

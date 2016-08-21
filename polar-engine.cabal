@@ -21,11 +21,13 @@ library
                        Polar.Log,
                        Polar.Exit,
                        Polar.Storage,
+                       Polar.Unique,
                        Polar.Core.Config,
                        Polar.Core.File,
                        Polar.Core.Run,
                        Polar.Sys.Run,
                        Polar.Logic.Run,
+                       Polar.System.Renderer,
                        Polar.System.Renderer.OpenGL_3_2,
                        Polar.Shader.Compiler.GLSL150,
                        Polar.Types,
@@ -49,7 +51,7 @@ library
 test-suite example-basic
   type:                exitcode-stdio-1.0
   main-is:             Main.hs
-  build-depends:       base >=4.8 && <5.0, polar-engine
+  build-depends:       base >=4.8 && <5.0, mtl >=2.2, polar-engine
   default-language:    Haskell2010
   hs-source-dirs:      examples/basic
   ghc-options:         -W
