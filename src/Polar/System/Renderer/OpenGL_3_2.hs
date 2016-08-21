@@ -101,7 +101,7 @@ createProgram path = f <$> liftIO (readFile path) >>= \case
     Left err -> logFatal ("Failed to create program: " ++ err)
   where f contents = compile contents
             (M.fromList [("projection", DataMatrix4x4)])
-            (M.fromList [("vertex", DataFloat2)])
+            (M.fromList [("vertex", DataFloat3)])
             (M.fromList [("color", DataFloat4)]) GLSL150
 
 createGLShader :: String -> GL.ShaderType -> Core GL.Shader
@@ -135,7 +135,7 @@ createDrawable vertices = do
     gl $ withArray vertices $ \buffer -> do
         let len = length vertices * sizeOf (head vertices)
         GL.bufferData GL.ArrayBuffer $= (fromIntegral len, buffer, GL.StaticDraw)
-    gl $ GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float 0 nullPtr)
+    gl $ GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float 0 nullPtr)
     gl $ GL.vertexAttribArray   (GL.AttribLocation 0) $= GL.Enabled
     pure (vao, length vertices)
 

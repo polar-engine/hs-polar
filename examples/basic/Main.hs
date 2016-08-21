@@ -15,9 +15,9 @@ primSubmitter = defaultSystem "Primitive Submitter"
     & startup .~ tell [SysCoreAction (void $ submitPrimitive prim)]
 
 prim :: Primitive
-prim = [ -1, -1
-       ,  1, -1
-       ,  0,  1
+prim = [ -1, -1, 0
+       ,  1, -1, 0
+       ,  0,  1, 0
        ]
 
 main :: IO ()
