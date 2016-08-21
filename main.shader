@@ -1,9 +1,8 @@
 vertex {
-	position = vertex 1
+	position = projection * translation * rotation * vertex 1
 }
 
 pixel {
-	one := 1
-	zerozero := 0 0
-	color = one zerozero 1
+	red := 1 0 0
+	color = red 1
 }
