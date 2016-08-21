@@ -38,6 +38,7 @@ library
                        Polar.Types.Config,
                        Polar.Types.Log,
                        Polar.Types.Storage,
+                       Polar.Types.Primitive,
                        Polar.Types.Lenses
   build-depends:       base >=4.8 && <5.0, containers >=0.5.5, transformers >=0.4, mtl >=2.2, bytestring >=0.10, lens >=4.12,
                        hint >=0.4, unordered-containers >=0.2, vector >=0.11, hashable >=1.2, stm >=2.4,

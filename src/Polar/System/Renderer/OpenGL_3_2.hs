@@ -62,15 +62,14 @@ startupF = do
             program <- createProgram "main.shader"
             gl (GL.currentProgram $= Just program)
             gl (GL.clearColor $= GL.Color4 0.02 0.05 0.1 0)
-            void $ store =<< createDrawable [ -1, -1
-                                            ,  1, -1
-                                            ,  0,  1
-                                            ]
 
 tickF :: Core ()
 tickF = do
     win <- retrieveKeyed "window"
     bool (render win) exit =<< liftIO (GLFW.windowShouldClose win)
+    readRendererMsg >>= \case
+        Just (_, prim) -> void $ store =<< createDrawable prim
+        Nothing        -> pure ()
     mRetrieveKeyed GLFW.Key'Escape >>= \case
         Just True -> exit
         _         -> pure ()
@@ -78,9 +77,6 @@ tickF = do
 render :: GLFW.Window -> Core ()
 render win = do
     gl (GL.clear [GL.ColorBuffer, GL.DepthBuffer])
-    readRendererMsg >>= \case
-        Nothing -> pure ()
-        Just m  -> logWrite TRACE ("Received renderer message: " ++ show m)
     traverse_ renderOne =<< retrieveAll
     liftIO (GLFW.swapBuffers win)
     liftIO GLFW.pollEvents
@@ -130,7 +126,7 @@ createGLProgram shaders = do
             log <- gl (GL.get $ GL.programInfoLog program)
             logFatal ("Failed to create program:\n" ++ log)
 
-createDrawable :: [GL.GLfloat] -> Core Drawable
+createDrawable :: Primitive -> Core Drawable
 createDrawable vertices = do
     vao <- gl GL.genObjectName
     gl (GL.bindVertexArrayObject $= Just vao)

@@ -10,10 +10,16 @@ hello = defaultSystem "Hello"
     & startup  .~ logWrite NOTICE "Hello!"
     & shutdown .~ logWrite NOTICE "Goodbye... :("
 
-prim :: System
-prim = defaultSystem "Primitive Submitter"
-    & startup .~ tell [SysCoreAction (void $ submitPrimitive ())]
+primSubmitter :: System
+primSubmitter = defaultSystem "Primitive Submitter"
+    & startup .~ tell [SysCoreAction (void $ submitPrimitive prim)]
+
+prim :: Primitive
+prim = [ -1, -1
+       ,  1, -1
+       ,  0,  1
+       ]
 
 main :: IO ()
 main = run $ defaultEngine
-    & systems .~ [hello, prim, renderer]
+    & systems .~ [hello, primSubmitter, renderer]
