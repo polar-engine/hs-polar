@@ -47,6 +47,21 @@ projection fov zNear zFar = [ s, 0, 0,                    0
   where s = recip $ tan (fov * 0.5 * pi / 180.0)
         negFarLimit = zFar / (zFar - zNear)
 
+translation :: Floating a => a -> a -> a -> [a]
+translation x y z = [ 1, 0, 0, 0
+                    , 0, 1, 0, 0
+                    , 0, 0, 1, 0
+                    , x, y, z, 1
+                    ]
+
+xRotation :: Floating a => a -> [a]
+xRotation x = [ 1,            0,         0, 0
+              , 0,   cos theta , sin theta, 0
+              , 0, -(sin theta), cos theta, 0
+              , 0,            0,         0, 1
+              ]
+  where theta = -x
+
 renderer :: System
 renderer = defaultSystem "OpenGL 3.2 Renderer"
     & startup  .~ tell [SysCoreAction startupF]
@@ -70,6 +85,7 @@ startupF = do
             liftIO $ GLFW.setKeyCallback win (Just (keyCB chan))
             liftIO $ GLFW.makeContextCurrent (Just win)
             program <- createProgram "main.shader"
+            storeKeyed "program" program
             gl (GL.currentProgram $= Just program)
             GL.UniformLocation loc <- gl (GL.uniformLocation program "u_projection")
             gl $ withArray (projection 70 1 1000) $ \buffer ->
@@ -80,12 +96,30 @@ tickF :: Core ()
 tickF = do
     win <- retrieveKeyed "window"
     bool (render win) exit =<< liftIO (GLFW.windowShouldClose win)
-    readRendererMsg >>= \case
-        Just (_, prim) -> void $ store =<< createDrawable prim
-        Nothing        -> pure ()
     mRetrieveKeyed GLFW.Key'Escape >>= \case
         Just True -> exit
         _         -> pure ()
+    readRendererMsg >>= \case
+        Just (_, prim) -> void $ store =<< createDrawable prim
+        Nothing        -> pure ()
+    translate
+    rotate
+
+translate :: Core ()
+translate = do
+    program <- retrieveKeyed "program"
+    GL.UniformLocation loc <- gl (GL.uniformLocation program "u_translation")
+    gl $ withArray (translation 0 (-0.2) (-5)) $ \buffer ->
+        GL.glUniformMatrix4fv loc 1 0 buffer
+
+rotate :: Core ()
+rotate = do
+    x <- maybe 0 (+ 0.05) <$> mRetrieveKeyedP "xrot" (Proxy :: Proxy Float)
+    storeKeyed "xrot" x
+    program <- retrieveKeyed "program"
+    GL.UniformLocation loc <- gl (GL.uniformLocation program "u_rotation")
+    gl $ withArray (xRotation x) $ \buffer ->
+        GL.glUniformMatrix4fv loc 1 0 buffer
 
 render :: GLFW.Window -> Core ()
 render win = do
@@ -113,7 +147,10 @@ createProgram path = f <$> liftIO (readFile path) >>= \case
         createGLProgram [vsh, fsh]
     Left err -> logFatal ("Failed to create program: " ++ err)
   where f contents = compile contents
-            (M.fromList [("projection", DataMatrix4x4)])
+            (M.fromList [ ("projection",  DataMatrix4x4)
+                        , ("translation", DataMatrix4x4)
+                        , ("rotation",    DataMatrix4x4)
+                        ])
             (M.fromList [("vertex", DataFloat3)])
             (M.fromList [("color", DataFloat4)]) GLSL150
 

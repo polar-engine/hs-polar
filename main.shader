@@ -1,5 +1,5 @@
 vertex {
-	position = projection * (vertex + 0 0 -3) 1
+	position = projection * translation * rotation * vertex 1
 }
 
 pixel {
