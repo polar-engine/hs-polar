@@ -11,8 +11,8 @@ cache:
 addons:
   apt:
     packages:
-      - libgmp
       - libgmp-dev
+      - libxxf86vm-dev
 
 before_install:
 - mkdir -p $HOME/.local/bin
